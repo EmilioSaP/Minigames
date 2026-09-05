@@ -2,6 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : NetworkBehaviour
 {
     [Header("Movement Settings")]
@@ -10,97 +11,40 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float jumpHeight = 2f;
     [SerializeField] private float gravity = -9.81f;
 
-    [Header("Look Settings")]
-    [SerializeField] private Transform cameraTransform;
-    [SerializeField] private float mouseSensitivity = 10f;
+    public bool IsMoving { get; private set; }
+    public bool IsSprinting { get; private set; }
+    public bool IsJumping { get; private set; }
 
     private CharacterController characterController;
-    private Vector3 velocity;
-    private float xRotation = 0f;
-    private bool isLooking = false; 
+    private Vector3 verticalVelocity; // Renamed to clarify it only handles Up/Down
+    private bool sprintToggled;
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
     }
 
-    public override void OnNetworkSpawn()
-    {
-        // Only the local player should have an active camera and start in look mode
-        if (IsOwner)
-        {
-            SetLookMode(true);
-        }
-        else if (cameraTransform != null)
-        {
-            cameraTransform.gameObject.SetActive(false);
-        }
-    }
-
     private void Update()
     {
         if (!IsOwner) return;
 
-        HandleCursorToggle();
-
-        if (isLooking)
-        {
-            HandleLook();
-        }
-
         HandleMovement();
-    }
-
-    private void HandleCursorToggle()
-    {
-        if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
-        {
-            SetLookMode(!isLooking);
-        }
-    }
-
-    private void SetLookMode(bool state)
-    {
-        isLooking = state;
-        Cursor.lockState = isLooking ? CursorLockMode.Locked : CursorLockMode.None;
-        Cursor.visible = !isLooking;
-    }
-
-    private void HandleLook()
-    {
-        if (Mouse.current == null) return;
-
-        Vector2 mouseDelta = Mouse.current.delta.ReadValue();
-        
-        // Scale down the raw delta to make sensitivity values more manageable
-        float mouseX = mouseDelta.x * mouseSensitivity * 0.1f;
-        float mouseY = mouseDelta.y * mouseSensitivity * 0.1f;
-
-        // Vertical rotation (Camera)
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f); // Prevent neck-breaking
-
-        if (cameraTransform != null)
-        {
-            cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        }
-
-        // Horizontal rotation (Player Body)
-        transform.Rotate(Vector3.up * mouseX);
     }
 
     private void HandleMovement()
     {
-        // 1. Gravity and Ground Check
+        // 1. Check ground state
         bool isGrounded = characterController.isGrounded;
-        if (isGrounded && velocity.y < 0)
+        if (isGrounded && verticalVelocity.y < 0)
         {
-            velocity.y = -2f; // Slight downward force to keep grounded
+            // Push the player slightly into the ground to ensure they stay grounded on slopes
+            verticalVelocity.y = -2f; 
+            IsJumping = false;
         }
 
         // 2. Read Inputs
         Vector2 input = Vector2.zero;
-        bool isSprinting = false;
+        IsSprinting = false;
         bool jumpPressed = false;
 
         if (Keyboard.current != null)
@@ -110,29 +54,37 @@ public class PlayerMovement : NetworkBehaviour
             if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) input.x -= 1f;
             if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) input.x += 1f;
 
-            // Sprint mapping: Shift or Q
-            isSprinting = Keyboard.current.shiftKey.isPressed || Keyboard.current.qKey.isPressed;
-            
-            // Jump mapping: Space
-            jumpPressed = Keyboard.current.spaceKey.wasPressedThisFrame;
+            bool sprintPressedThisFrame = Keyboard.current.shiftKey.wasPressedThisFrame || Keyboard.current.qKey.wasPressedThisFrame;
+            if (sprintPressedThisFrame)
+            {
+                sprintToggled = !sprintToggled;
+            }
+
+            IsSprinting = sprintToggled;
+            jumpPressed = Keyboard.current.spaceKey.isPressed;
         }
 
-        // 3. Apply Movement (Relative to player's rotation)
+        // 3. Calculate Horizontal Movement
         Vector3 move = transform.right * input.x + transform.forward * input.y;
         move.Normalize();
+        
+        IsMoving = move.sqrMagnitude > 0.01f;
+        float currentSpeed = IsSprinting ? sprintSpeed : walkSpeed;
+        Vector3 horizontalVelocity = move * currentSpeed;
 
-        float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
-        characterController.Move(move * currentSpeed * Time.deltaTime);
-
-        // 4. Apply Jump
+        // 4. Calculate Jump
         if (jumpPressed && isGrounded)
         {
-            // Physics formula for calculating jump velocity required to reach a specific height
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            IsJumping = true;
         }
 
         // 5. Apply Gravity
-        velocity.y += gravity * Time.deltaTime;
-        characterController.Move(velocity * Time.deltaTime);
+        verticalVelocity.y += gravity * Time.deltaTime;
+
+        // 6. COMBINE ALL MOVEMENT INTO A SINGLE MOVE CALL
+        // This prevents the "micro-bounce" that causes isGrounded to flicker on WebGL
+        Vector3 finalMovement = horizontalVelocity + verticalVelocity;
+        characterController.Move(finalMovement * Time.deltaTime);
     }
 }
