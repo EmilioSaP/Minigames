@@ -17,7 +17,6 @@ public class PlayerMovement : NetworkBehaviour
 
     private CharacterController characterController;
     private Vector3 verticalVelocity; // Renamed to clarify it only handles Up/Down
-    private bool sprintToggled;
 
     private void Awake()
     {
@@ -54,13 +53,7 @@ public class PlayerMovement : NetworkBehaviour
             if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) input.x -= 1f;
             if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) input.x += 1f;
 
-            bool sprintPressedThisFrame = Keyboard.current.shiftKey.wasPressedThisFrame || Keyboard.current.qKey.wasPressedThisFrame;
-            if (sprintPressedThisFrame)
-            {
-                sprintToggled = !sprintToggled;
-            }
-
-            IsSprinting = sprintToggled;
+            IsSprinting = Keyboard.current.shiftKey.isPressed || Keyboard.current.qKey.isPressed;;
             jumpPressed = Keyboard.current.spaceKey.isPressed;
         }
 

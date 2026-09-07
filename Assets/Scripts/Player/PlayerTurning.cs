@@ -5,27 +5,25 @@ using UnityEngine.InputSystem;
 public class PlayerTurning : NetworkBehaviour
 {
     [Header("Look Settings")]
-    [SerializeField] private Transform cameraTransform;
+    [SerializeField] private Transform cameraPivot;
     [SerializeField] private float mouseSensitivity = 10f;
+    [SerializeField] private float verticalLookLimit = 90f;
 
-    private float xRotation = 0f;
-    private bool isLooking = false; 
+    private float xRotation;
+    private bool isLooking;
 
     public override void OnNetworkSpawn()
     {
-        if (IsOwner)
-        {
-            SetLookMode(true);
-        }
-        else if (cameraTransform != null)
-        {
-            cameraTransform.gameObject.SetActive(false);
-        }
+        if (!IsOwner)
+            return;
+
+        SetLookMode(true);
     }
 
     private void Update()
     {
-        if (!IsOwner) return;
+        if (!IsOwner)
+            return;
 
         HandleCursorToggle();
 
@@ -37,7 +35,10 @@ public class PlayerTurning : NetworkBehaviour
 
     private void HandleCursorToggle()
     {
-        if (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+        if (Keyboard.current == null)
+            return;
+
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             SetLookMode(!isLooking);
         }
@@ -46,27 +47,39 @@ public class PlayerTurning : NetworkBehaviour
     private void SetLookMode(bool state)
     {
         isLooking = state;
-        Cursor.lockState = isLooking ? CursorLockMode.Locked : CursorLockMode.None;
-        Cursor.visible = !isLooking;
+
+        Cursor.lockState = state
+            ? CursorLockMode.Locked
+            : CursorLockMode.None;
+
+        Cursor.visible = !state;
     }
 
     private void HandleLook()
     {
-        if (Mouse.current == null) return;
+        if (Mouse.current == null)
+            return;
 
         Vector2 mouseDelta = Mouse.current.delta.ReadValue();
-        
+
         float mouseX = mouseDelta.x * mouseSensitivity * 0.1f;
         float mouseY = mouseDelta.y * mouseSensitivity * 0.1f;
 
+        // Vertical look
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f); 
+        xRotation = Mathf.Clamp(
+            xRotation,
+            -verticalLookLimit,
+            verticalLookLimit
+        );
 
-        if (cameraTransform != null)
+        if (cameraPivot != null)
         {
-            cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+            cameraPivot.localRotation =
+                Quaternion.Euler(xRotation, 0f, 0f);
         }
 
+        // Horizontal look
         transform.Rotate(Vector3.up * mouseX);
     }
 }
