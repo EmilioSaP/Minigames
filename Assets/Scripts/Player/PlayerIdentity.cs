@@ -37,7 +37,12 @@ public class PlayerIdentity : NetworkBehaviour
 
     private void SetPlayerName()
     {
-        PlayerName.Value = $"Player {OwnerClientId + 1}";
+        string playerName = PlayerSettings.PlayerName;
+
+        if (string.IsNullOrEmpty(playerName))
+            playerName = $"Player {OwnerClientId + 1}";
+
+        PlayerName.Value = playerName;
     }
 
     private void OnPlayerNameChanged(
@@ -55,16 +60,3 @@ public class PlayerIdentity : NetworkBehaviour
         }
     }
 }
-
-public static class PlayerSettings
-    {
-        public static string PlayerName
-        {
-            get => PlayerPrefs.GetString("PlayerName", "");
-            set
-            {
-                PlayerPrefs.SetString("PlayerName", value);
-                PlayerPrefs.Save();
-            }
-        }
-    }

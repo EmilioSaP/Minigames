@@ -4,23 +4,32 @@ using UnityEngine;
 public class PlayerNameTag : MonoBehaviour
 {
     [SerializeField] private TMP_Text nameText;
-    [SerializeField] private Transform playerCamera;
 
-    public void SetName(string playerName)
+    private Transform localCamera;
+
+    private void Start()
     {
-        nameText.text = playerName;
+        Camera cam = Camera.main;
+
+        if (cam != null)
+            localCamera = cam.transform;
     }
 
     private void LateUpdate()
     {
-        if (playerCamera == null)
+        if (localCamera == null)
             return;
 
-        Vector3 direction = playerCamera.position - transform.position;
+        Vector3 direction = localCamera.position - transform.position;
 
         if (direction.sqrMagnitude > 0.001f)
         {
             transform.rotation = Quaternion.LookRotation(-direction);
         }
+    }
+
+    public void SetName(string playerName)
+    {
+        nameText.text = playerName;
     }
 }

@@ -37,14 +37,9 @@ public class PlayerTurning : NetworkBehaviour
     {
         if (Keyboard.current == null)
             return;
-
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            SetLookMode(!isLooking);
-        }
     }
 
-    private void SetLookMode(bool state)
+    public void SetLookMode(bool state)
     {
         isLooking = state;
 

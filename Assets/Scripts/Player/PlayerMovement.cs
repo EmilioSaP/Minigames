@@ -16,7 +16,9 @@ public class PlayerMovement : NetworkBehaviour
     public bool IsJumping { get; private set; }
 
     private CharacterController characterController;
+    private bool movementEnabled = true;
     private Vector3 verticalVelocity; // Renamed to clarify it only handles Up/Down
+    
 
     private void Awake()
     {
@@ -30,6 +32,18 @@ public class PlayerMovement : NetworkBehaviour
         HandleMovement();
     }
 
+    public void SetMovementEnabled(bool state)
+    {
+        movementEnabled = state;
+
+        if (!state)
+        {
+            IsMoving = false;
+            IsSprinting = false;
+            IsJumping = false;
+        }
+    }
+
     private void HandleMovement()
     {
         // 1. Check ground state
@@ -39,6 +53,14 @@ public class PlayerMovement : NetworkBehaviour
             // Push the player slightly into the ground to ensure they stay grounded on slopes
             verticalVelocity.y = -2f; 
             IsJumping = false;
+        }
+
+        if (!movementEnabled)
+        {
+            // If movement is disabled, we still want to apply gravity to keep the player grounded
+            verticalVelocity.y += gravity * Time.deltaTime;
+            characterController.Move(verticalVelocity * Time.deltaTime);
+            return;
         }
 
         // 2. Read Inputs

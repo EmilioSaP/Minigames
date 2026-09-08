@@ -16,6 +16,7 @@ public class CameraViewToggle : NetworkBehaviour
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private GameObject playerVisual;
+    [SerializeField] private GameObject playerVisualHat;
     [SerializeField] private GameObject playerNameTag;
 
     [Header("Third Person Offsets")]
@@ -85,6 +86,7 @@ public class CameraViewToggle : NetworkBehaviour
     private void ApplyFirstPerson()
     {
         playerVisual.SetActive(false);
+        playerVisualHat.SetActive(false);
 
         if (playerNameTag != null)
             playerNameTag.SetActive(false);
@@ -95,6 +97,7 @@ public class CameraViewToggle : NetworkBehaviour
     private void ApplyThirdPerson(int offsetIndex)
     {
         playerVisual.SetActive(true);
+        playerVisualHat.SetActive(true);
 
         if (playerNameTag != null)
             playerNameTag.SetActive(true);
