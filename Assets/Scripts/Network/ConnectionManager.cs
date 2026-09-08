@@ -15,8 +15,10 @@ public class ConnectionManager : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private TMP_InputField joinCodeInput;
+    [SerializeField] private TMP_InputField joinCodeTextField;  // Makes it easier to copy the join code
     [SerializeField] private TextMeshProUGUI joinCodeText;
     [SerializeField] private TextMeshProUGUI statusText;
+    [SerializeField] private TMP_InputField usernameInput;
 
     [Header("Relay")]
     [SerializeField] private int maxConnections = 4;
@@ -53,6 +55,7 @@ public class ConnectionManager : MonoBehaviour
 
     public async void HostGame()
     {
+        PlayerSettings.PlayerName = GetPlayerName();
         await InitializeServices();
 
         try
@@ -80,6 +83,9 @@ public class ConnectionManager : MonoBehaviour
             {
                 joinCodeText.text = $"Join Code: {joinCode}";
                 statusText.text = "Hosting game!";
+                //enable the gamobject containing the joinCodeTextField so that the player can copy the join code
+                joinCodeTextField.gameObject.SetActive(true);
+                joinCodeTextField.text = joinCode; // Set the input field to the join code for easy copying
 
                 Debug.Log($"HOST STARTED");
                 Debug.Log($"Join Code: {joinCode}");
@@ -100,6 +106,7 @@ public class ConnectionManager : MonoBehaviour
 
     public async void JoinGame()
     {
+        PlayerSettings.PlayerName = GetPlayerName();
         await InitializeServices();
 
         string joinCode = joinCodeInput.text.Trim();
@@ -146,5 +153,15 @@ public class ConnectionManager : MonoBehaviour
 
             Debug.LogError($"Join failed: {e}");
         }
+    }
+
+    public string GetPlayerName()
+    {
+        string playerName = usernameInput.text.Trim();
+
+        if (string.IsNullOrEmpty(playerName))
+            return $"Player {UnityEngine.Random.Range(1000, 9999)}";
+
+        return playerName;
     }
 }
