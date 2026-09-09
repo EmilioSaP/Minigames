@@ -54,5 +54,10 @@ public class PauseGameScript : MonoBehaviour
 
         if (disablePlayer != null)
             disablePlayer.SetPlayerEnabled(!isPaused);
+        // For the case the player was destroyed and disablePlayer is no longer available and mouse remained locked.
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
+        }
     }
 }

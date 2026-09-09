@@ -3,17 +3,21 @@ using UnityEngine;
 
 public class NetworkGameManager : MonoBehaviour
 {
-    [SerializeField] private Transform[] spawnPoints;
+    [SerializeField] private NetworkPlayerSpawn playerSpawn;
 
     private void Start()
     {
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
     }
 
     private void OnDestroy()
     {
         if (NetworkManager.Singleton != null)
+        {
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
     }
 
     private void OnClientConnected(ulong clientId)
@@ -21,13 +25,22 @@ public class NetworkGameManager : MonoBehaviour
         if (!NetworkManager.Singleton.IsServer)
             return;
 
-        NetworkObject player = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject;
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
+            return;
+
+        NetworkObject player = client.PlayerObject;
 
         if (player == null)
             return;
 
-        int spawnIndex = (int)(clientId % (ulong)spawnPoints.Length);
+        player.transform.position = playerSpawn.PlayerSpawnPoint();
+    }
 
-        player.transform.position = spawnPoints[spawnIndex].position;
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (!NetworkManager.Singleton.IsServer)
+            return;
+
+        Debug.Log($"Client disconnected: {clientId}");
     }
 }
