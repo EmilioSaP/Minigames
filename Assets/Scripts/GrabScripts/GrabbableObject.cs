@@ -8,7 +8,11 @@ public class GrabbableObject : NetworkBehaviour
     [SerializeField] private Vector3 heldOffset;
 
     [Header("Held Physics")]
-    [SerializeField] private bool worldCollisionWhileHeld = false;
+    [SerializeField] private bool worldCollisionWhileHeld = true;
+
+    [Header("Throw")]
+    [SerializeField] private float throwChargeTime = 1f;
+    [SerializeField] private float maxThrowForce = 20f;
 
     [Header("Movement Effects")]
     [SerializeField] private float slowPlayer = 1f;
@@ -18,6 +22,9 @@ public class GrabbableObject : NetworkBehaviour
     public Vector3 HeldOffset => heldOffset;
 
     public bool WorldCollisionWhileHeld => worldCollisionWhileHeld;
+
+    public float ThrowChargeTime => throwChargeTime;
+    public float MaxThrowForce => maxThrowForce;
 
     public float SlowPlayer => slowPlayer;
     public float SlowJump => slowJump;

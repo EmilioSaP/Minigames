@@ -8,7 +8,8 @@ public class PickupController : NetworkBehaviour
     {
         None,
         PickingUp,
-        Held
+        Held,
+        ChargingThrow
     }
 
     [Header("References")]
@@ -18,6 +19,9 @@ public class PickupController : NetworkBehaviour
 
     [Header("Held Object")]
     [SerializeField] private float holdFollowSpeed = 15f;
+
+    [Header("Throw")]
+    [SerializeField] private float minimumThrowCharge = 0.1f;
 
     private InteractionUI interactionUI;
 
@@ -29,11 +33,30 @@ public class PickupController : NetworkBehaviour
     private GrabbableObject pickupTarget;
     private float pickupTimer;
 
+    private float throwChargeTimer;
+
     private Collider[] heldColliders;
     private Collider playerCollider;
 
     public bool IsHoldingObject => heldObject != null;
     public bool IsPickingUp => pickupState == PickupState.PickingUp;
+    public bool IsChargingThrow => pickupState == PickupState.ChargingThrow;
+
+    public float ThrowChargeNormalized
+    {
+        get
+        {
+            if (heldObject == null)
+                return 0f;
+
+            if (heldObject.ThrowChargeTime <= 0f)
+                return 1f;
+
+            return Mathf.Clamp01(
+                throwChargeTimer / heldObject.ThrowChargeTime
+            );
+        }
+    }
 
     public override void OnNetworkSpawn()
     {
@@ -94,6 +117,10 @@ public class PickupController : NetworkBehaviour
 
             case PickupState.Held:
                 HandleHeldInput();
+                break;
+
+            case PickupState.ChargingThrow:
+                HandleThrowCharge();
                 break;
         }
 
@@ -167,15 +194,130 @@ public class PickupController : NetworkBehaviour
     }
 
     // ---------------------------------------------------------
-    // HOLDING
+    // HOLDING / THROWING
     // ---------------------------------------------------------
 
     private void HandleHeldInput()
     {
-        if (!Mouse.current.leftButton.wasPressedThisFrame)
+        // Pressing and holding the button starts charging.
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            StartThrowCharge();
+        }
+    }
+
+    private void StartThrowCharge()
+    {
+        if (heldObject == null)
             return;
 
-        DropObject();
+        throwChargeTimer = 0f;
+
+        // No charging time means full power immediately.
+        if (heldObject.ThrowChargeTime <= 0f)
+        {
+            throwChargeTimer = 0f;
+        }
+
+        pickupState = PickupState.ChargingThrow;
+    }
+
+    private void HandleThrowCharge()
+    {
+        if (heldObject == null || heldRigidbody == null)
+        {
+            ClearHeldObject();
+            return;
+        }
+
+        // Keep charging while the button is held.
+        if (Mouse.current.leftButton.isPressed)
+        {
+            if (heldObject.ThrowChargeTime > 0f)
+            {
+                throwChargeTimer += Time.deltaTime;
+
+                // Clamp the timer so it never grows indefinitely.
+                throwChargeTimer = Mathf.Min(
+                    throwChargeTimer,
+                    heldObject.ThrowChargeTime
+                );
+            }
+
+            return;
+        }
+
+        // Button was released.
+        ReleaseThrow();
+    }
+
+    private void ReleaseThrow()
+    {
+        if (heldObject == null || heldRigidbody == null)
+        {
+            ClearHeldObject();
+            return;
+        }
+
+        float normalizedCharge = GetThrowCharge();
+        Vector3 throwDirection = GetThrowDirection();
+
+        // A tiny tap is considered a normal drop.
+        if (normalizedCharge < minimumThrowCharge)
+        {
+            DropObject();
+            return;
+        }
+
+        ThrowObject(
+            throwDirection,
+            normalizedCharge
+        );
+    }
+
+    private float GetThrowCharge()
+    {
+        if (heldObject == null)
+            return 0f;
+
+        if (heldObject.ThrowChargeTime <= 0f)
+            return 1f;
+
+        return Mathf.Clamp01(
+            throwChargeTimer / heldObject.ThrowChargeTime
+        );
+    }
+
+    private Vector3 GetThrowDirection()
+    {
+        if (playerView == null)
+            return transform.forward;
+
+        return playerView.transform.forward.normalized;
+    }
+
+    private void ThrowObject(
+        Vector3 direction,
+        float normalizedCharge)
+    {
+        float throwForce =
+            normalizedCharge * heldObject.MaxThrowForce;
+
+        RestoreHeldCollision();
+
+        // Return the object to normal physics first.
+        heldRigidbody.isKinematic = false;
+
+        heldRigidbody.linearVelocity = Vector3.zero;
+        heldRigidbody.angularVelocity = Vector3.zero;
+
+        // Apply the actual throw.
+        heldRigidbody.AddForce(
+            direction * throwForce,
+            ForceMode.Impulse
+        );
+
+        ClearHeldObject();
     }
 
     private void PickUpObject(GrabbableObject objectToPickup)
@@ -204,52 +346,12 @@ public class PickupController : NetworkBehaviour
 
         pickupTarget = null;
         pickupTimer = 0f;
+        throwChargeTimer = 0f;
+
         pickupState = PickupState.Held;
 
         if (interactionUI != null)
             interactionUI.HidePrompt();
-    }
-
-    private void FollowHeldObject()
-    {
-        if (pickupState != PickupState.Held)
-            return;
-
-        if (heldObject == null || heldRigidbody == null)
-            return;
-
-        if (grabPosition == null)
-            return;
-
-        // Position
-        Vector3 targetPosition =
-            grabPosition.position +
-            grabPosition.TransformVector(heldObject.HeldOffset);
-
-        heldRigidbody.MovePosition(
-            Vector3.Lerp(
-                heldRigidbody.position,
-                targetPosition,
-                holdFollowSpeed * Time.deltaTime
-            )
-        );
-
-        // Rotation
-        if (playerView != null)
-        {
-            float playerYaw = playerView.transform.eulerAngles.y;
-
-            Quaternion targetRotation =
-                Quaternion.Euler(0f, playerYaw, 0f);
-
-            heldRigidbody.MoveRotation(
-                Quaternion.Lerp(
-                    heldRigidbody.rotation,
-                    targetRotation,
-                    holdFollowSpeed * Time.deltaTime
-                )
-            );
-        }
     }
 
     private void DropObject()
@@ -275,7 +377,36 @@ public class PickupController : NetworkBehaviour
         heldRigidbody = null;
         heldColliders = null;
 
+        pickupTarget = null;
+        pickupTimer = 0f;
+        throwChargeTimer = 0f;
+
         pickupState = PickupState.None;
+    }
+
+    // ---------------------------------------------------------
+    // HELD OBJECT FOLLOWING
+    // ---------------------------------------------------------
+
+    private void FollowHeldObject()
+    {
+        if (heldObject == null || heldRigidbody == null)
+            return;
+
+        if (grabPosition == null)
+            return;
+
+        Vector3 targetPosition =
+            grabPosition.position +
+            grabPosition.TransformVector(heldObject.HeldOffset);
+
+        heldRigidbody.MovePosition(
+            Vector3.Lerp(
+                heldRigidbody.position,
+                targetPosition,
+                holdFollowSpeed * Time.deltaTime
+            )
+        );
     }
 
     // ---------------------------------------------------------
@@ -324,8 +455,6 @@ public class PickupController : NetworkBehaviour
             return;
         }
 
-        // World collision stays enabled.
-        // Only ignore collision with the holder.
         if (playerCollider == null)
             return;
 
@@ -385,7 +514,8 @@ public class PickupController : NetworkBehaviour
         if (interactionUI == null)
             return;
 
-        if (pickupState == PickupState.Held)
+        if (pickupState == PickupState.Held ||
+            pickupState == PickupState.ChargingThrow)
         {
             interactionUI.HidePrompt();
             return;
