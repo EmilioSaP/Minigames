@@ -28,6 +28,8 @@ public class CameraViewToggle : NetworkBehaviour
 
     private CameraView currentView = CameraView.FirstPerson;
 
+    public bool IsFirstPerson => currentView == CameraView.FirstPerson;
+
     public override void OnNetworkSpawn()
     {
         if (IsOwner)

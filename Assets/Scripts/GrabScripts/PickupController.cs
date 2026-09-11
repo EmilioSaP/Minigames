@@ -17,8 +17,6 @@ public class PickupController : NetworkBehaviour
     [SerializeField] private Transform grabPosition;
     [SerializeField] private GameObject playerView;
 
-    [Header("Held Object")]
-    [SerializeField] private float holdFollowSpeed = 15f;
 
     [Header("Throw")]
     [SerializeField] private float minimumThrowCharge = 0.1f;
@@ -26,7 +24,6 @@ public class PickupController : NetworkBehaviour
     private InteractionUI interactionUI;
 
     private GrabbableObject heldObject;
-    private Rigidbody heldRigidbody;
 
     private PickupState pickupState = PickupState.None;
 
@@ -35,13 +32,17 @@ public class PickupController : NetworkBehaviour
 
     private float throwChargeTimer;
 
-    private Collider[] heldColliders;
-    private Collider playerCollider;
+    public bool IsHoldingObject =>
+        heldObject != null;
 
-    public bool IsHoldingObject => heldObject != null;
-    public bool IsPickingUp => pickupState == PickupState.PickingUp;
-    public bool IsChargingThrow => pickupState == PickupState.ChargingThrow;
+    public bool IsPickingUp =>
+        pickupState == PickupState.PickingUp;
 
+    public bool IsChargingThrow =>
+        pickupState == PickupState.ChargingThrow;
+        
+    public Transform GrabPosition => grabPosition;
+    
     public float ThrowChargeNormalized
     {
         get
@@ -53,7 +54,8 @@ public class PickupController : NetworkBehaviour
                 return 1f;
 
             return Mathf.Clamp01(
-                throwChargeTimer / heldObject.ThrowChargeTime
+                throwChargeTimer /
+                heldObject.ThrowChargeTime
             );
         }
     }
@@ -64,33 +66,11 @@ public class PickupController : NetworkBehaviour
             return;
 
         interactionUI = InteractionUI.Instance;
-        playerCollider = GetComponent<Collider>();
 
         if (interactionUI == null)
         {
             Debug.LogWarning(
                 "PickupController could not find InteractionUI.Instance."
-            );
-        }
-
-        if (interactionDetector == null)
-        {
-            Debug.LogWarning(
-                "PickupController has no InteractionDetector assigned."
-            );
-        }
-
-        if (grabPosition == null)
-        {
-            Debug.LogWarning(
-                "PickupController has no GrabPosition assigned."
-            );
-        }
-
-        if (playerView == null)
-        {
-            Debug.LogWarning(
-                "PickupController has no Player View assigned."
             );
         }
     }
@@ -123,8 +103,6 @@ public class PickupController : NetworkBehaviour
                 HandleThrowCharge();
                 break;
         }
-
-        FollowHeldObject();
     }
 
     // ---------------------------------------------------------
@@ -136,7 +114,8 @@ public class PickupController : NetworkBehaviour
         if (!Mouse.current.leftButton.wasPressedThisFrame)
             return;
 
-        GrabbableObject target = GetCurrentGrabbable();
+        GrabbableObject target =
+            GetCurrentGrabbable();
 
         if (target == null)
             return;
@@ -144,18 +123,20 @@ public class PickupController : NetworkBehaviour
         StartPickup(target);
     }
 
-    private void StartPickup(GrabbableObject target)
+    private void StartPickup(
+        GrabbableObject target)
     {
         pickupTarget = target;
         pickupTimer = 0f;
 
         if (target.PickupTime <= 0f)
         {
-            PickUpObject(target);
+            RequestPickup(target);
             return;
         }
 
-        pickupState = PickupState.PickingUp;
+        pickupState =
+            PickupState.PickingUp;
     }
 
     // ---------------------------------------------------------
@@ -170,7 +151,8 @@ public class PickupController : NetworkBehaviour
             return;
         }
 
-        GrabbableObject currentTarget = GetCurrentGrabbable();
+        GrabbableObject currentTarget =
+            GetCurrentGrabbable();
 
         if (currentTarget != pickupTarget)
         {
@@ -182,7 +164,7 @@ public class PickupController : NetworkBehaviour
 
         if (pickupTimer >= pickupTarget.PickupTime)
         {
-            PickUpObject(pickupTarget);
+            RequestPickup(pickupTarget);
         }
     }
 
@@ -194,16 +176,97 @@ public class PickupController : NetworkBehaviour
     }
 
     // ---------------------------------------------------------
-    // HOLDING / THROWING
+    // NETWORKED PICKUP
+    // ---------------------------------------------------------
+
+    private void RequestPickup(
+        GrabbableObject target)
+    {
+        if (target == null)
+        {
+            CancelPickup();
+            return;
+        }
+
+        NetworkObject networkObject =
+            target.GetComponent<NetworkObject>();
+
+        if (networkObject == null)
+        {
+            Debug.LogWarning(
+                $"'{target.name}' has no NetworkObject."
+            );
+
+            CancelPickup();
+            return;
+        }
+
+        RequestPickupServerRpc(
+            networkObject.NetworkObjectId
+        );
+
+        pickupTarget = null;
+        pickupTimer = 0f;
+        pickupState = PickupState.Held;
+
+        heldObject = target;
+    }
+
+    [ServerRpc]
+    private void RequestPickupServerRpc(
+        ulong networkObjectId,
+        ServerRpcParams rpcParams = default)
+    {
+        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects
+                .TryGetValue(
+                    networkObjectId,
+                    out NetworkObject networkObject))
+        {
+            return;
+        }
+
+        GrabbableObject grabbable =
+            networkObject.GetComponent<GrabbableObject>();
+
+        if (grabbable == null)
+            return;
+
+        bool success =
+            grabbable.TryPickup(
+                rpcParams.Receive.SenderClientId
+            );
+
+        if (!success)
+        {
+            NotifyPickupFailedClientRpc(
+                ClientRpcParamsFrom(
+                    rpcParams.Receive.SenderClientId
+                )
+            );
+        }
+    }
+
+    [ClientRpc]
+    private void NotifyPickupFailedClientRpc(
+        ClientRpcParams clientRpcParams)
+    {
+        if (!IsOwner)
+            return;
+
+        heldObject = null;
+        pickupState = PickupState.None;
+    }
+
+    // ---------------------------------------------------------
+    // HOLDING
     // ---------------------------------------------------------
 
     private void HandleHeldInput()
     {
-        // Pressing and holding the button starts charging.
-        if (Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            StartThrowCharge();
-        }
+        if (!Mouse.current.leftButton.wasPressedThisFrame)
+            return;
+
+        StartThrowCharge();
     }
 
     private void StartThrowCharge()
@@ -212,67 +275,61 @@ public class PickupController : NetworkBehaviour
             return;
 
         throwChargeTimer = 0f;
-
-        // No charging time means full power immediately.
-        if (heldObject.ThrowChargeTime <= 0f)
-        {
-            throwChargeTimer = 0f;
-        }
-
-        pickupState = PickupState.ChargingThrow;
+        pickupState =
+            PickupState.ChargingThrow;
     }
+
+    // ---------------------------------------------------------
+    // THROW CHARGE
+    // ---------------------------------------------------------
 
     private void HandleThrowCharge()
     {
-        if (heldObject == null || heldRigidbody == null)
+        if (heldObject == null)
         {
-            ClearHeldObject();
+            pickupState = PickupState.None;
             return;
         }
 
-        // Keep charging while the button is held.
         if (Mouse.current.leftButton.isPressed)
         {
             if (heldObject.ThrowChargeTime > 0f)
             {
                 throwChargeTimer += Time.deltaTime;
 
-                // Clamp the timer so it never grows indefinitely.
-                throwChargeTimer = Mathf.Min(
-                    throwChargeTimer,
-                    heldObject.ThrowChargeTime
-                );
+                throwChargeTimer =
+                    Mathf.Min(
+                        throwChargeTimer,
+                        heldObject.ThrowChargeTime
+                    );
             }
 
             return;
         }
 
-        // Button was released.
         ReleaseThrow();
     }
 
     private void ReleaseThrow()
     {
-        if (heldObject == null || heldRigidbody == null)
+        if (heldObject == null)
         {
-            ClearHeldObject();
+            ClearHeldState();
             return;
         }
 
-        float normalizedCharge = GetThrowCharge();
-        Vector3 throwDirection = GetThrowDirection();
+        float normalizedCharge =
+            GetThrowCharge();
 
-        // A tiny tap is considered a normal drop.
-        if (normalizedCharge < minimumThrowCharge)
+        if (normalizedCharge <
+            minimumThrowCharge)
         {
-            DropObject();
-            return;
+            RequestDrop();
         }
-
-        ThrowObject(
-            throwDirection,
-            normalizedCharge
-        );
+        else
+        {
+            RequestThrow(normalizedCharge);
+        }
     }
 
     private float GetThrowCharge()
@@ -284,134 +341,148 @@ public class PickupController : NetworkBehaviour
             return 1f;
 
         return Mathf.Clamp01(
-            throwChargeTimer / heldObject.ThrowChargeTime
+            throwChargeTimer /
+            heldObject.ThrowChargeTime
         );
     }
 
-    private Vector3 GetThrowDirection()
-    {
-        if (playerView == null)
-            return transform.forward;
+    // ---------------------------------------------------------
+    // NETWORKED DROP
+    // ---------------------------------------------------------
 
-        return playerView.transform.forward.normalized;
+    private void RequestDrop()
+    {
+        if (heldObject == null)
+            return;
+
+        NetworkObject networkObject =
+            heldObject.GetComponent<NetworkObject>();
+
+        if (networkObject == null)
+        {
+            ClearHeldState();
+            return;
+        }
+
+        RequestDropServerRpc(
+            networkObject.NetworkObjectId
+        );
+
+        ClearHeldState();
     }
 
-    private void ThrowObject(
-        Vector3 direction,
+    [ServerRpc]
+    private void RequestDropServerRpc(
+        ulong networkObjectId,
+        ServerRpcParams rpcParams = default)
+    {
+        if (!TryGetGrabbable(
+                networkObjectId,
+                out GrabbableObject grabbable))
+        {
+            return;
+        }
+
+        if (!grabbable.IsHeld)
+            return;
+
+        if (grabbable.HolderClientId !=
+            rpcParams.Receive.SenderClientId)
+        {
+            return;
+        }
+
+        grabbable.ServerDrop();
+    }
+
+    // ---------------------------------------------------------
+    // NETWORKED THROW
+    // ---------------------------------------------------------
+
+    private void RequestThrow(
         float normalizedCharge)
     {
-        float throwForce =
-            normalizedCharge * heldObject.MaxThrowForce;
+        if (heldObject == null)
+            return;
 
-        RestoreHeldCollision();
+        NetworkObject networkObject =
+            heldObject.GetComponent<NetworkObject>();
 
-        // Return the object to normal physics first.
-        heldRigidbody.isKinematic = false;
+        if (networkObject == null)
+        {
+            ClearHeldState();
+            return;
+        }
 
-        heldRigidbody.linearVelocity = Vector3.zero;
-        heldRigidbody.angularVelocity = Vector3.zero;
+        Vector3 direction =
+            playerView != null
+                ? playerView.transform.forward.normalized
+                : transform.forward;
 
-        // Apply the actual throw.
-        heldRigidbody.AddForce(
-            direction * throwForce,
-            ForceMode.Impulse
+        RequestThrowServerRpc(
+            networkObject.NetworkObjectId,
+            direction,
+            normalizedCharge
         );
 
-        ClearHeldObject();
+        ClearHeldState();
     }
 
-    private void PickUpObject(GrabbableObject objectToPickup)
+    [ServerRpc]
+    private void RequestThrowServerRpc(
+        ulong networkObjectId,
+        Vector3 direction,
+        float normalizedCharge,
+        ServerRpcParams rpcParams = default)
     {
-        Rigidbody rigidbody =
-            objectToPickup.GetComponent<Rigidbody>();
-
-        if (rigidbody == null)
+        if (!TryGetGrabbable(
+                networkObjectId,
+                out GrabbableObject grabbable))
         {
-            Debug.LogWarning(
-                $"GrabbableObject '{objectToPickup.name}' has no Rigidbody."
-            );
-
-            CancelPickup();
             return;
         }
 
-        heldObject = objectToPickup;
-        heldRigidbody = rigidbody;
+        if (!grabbable.IsHeld)
+            return;
 
-        heldRigidbody.linearVelocity = Vector3.zero;
-        heldRigidbody.angularVelocity = Vector3.zero;
-        heldRigidbody.isKinematic = true;
-
-        ConfigureHeldCollision();
-
-        pickupTarget = null;
-        pickupTimer = 0f;
-        throwChargeTimer = 0f;
-
-        pickupState = PickupState.Held;
-
-        if (interactionUI != null)
-            interactionUI.HidePrompt();
-    }
-
-    private void DropObject()
-    {
-        if (heldRigidbody == null)
+        if (grabbable.HolderClientId !=
+            rpcParams.Receive.SenderClientId)
         {
-            ClearHeldObject();
             return;
         }
 
-        RestoreHeldCollision();
+        if (direction.sqrMagnitude < 0.01f)
+            direction = Vector3.forward;
 
-        heldRigidbody.isKinematic = false;
-        heldRigidbody.linearVelocity = Vector3.zero;
-        heldRigidbody.angularVelocity = Vector3.zero;
-
-        ClearHeldObject();
-    }
-
-    private void ClearHeldObject()
-    {
-        heldObject = null;
-        heldRigidbody = null;
-        heldColliders = null;
-
-        pickupTarget = null;
-        pickupTimer = 0f;
-        throwChargeTimer = 0f;
-
-        pickupState = PickupState.None;
-    }
-
-    // ---------------------------------------------------------
-    // HELD OBJECT FOLLOWING
-    // ---------------------------------------------------------
-
-    private void FollowHeldObject()
-    {
-        if (heldObject == null || heldRigidbody == null)
-            return;
-
-        if (grabPosition == null)
-            return;
-
-        Vector3 targetPosition =
-            grabPosition.position +
-            grabPosition.TransformVector(heldObject.HeldOffset);
-
-        heldRigidbody.MovePosition(
-            Vector3.Lerp(
-                heldRigidbody.position,
-                targetPosition,
-                holdFollowSpeed * Time.deltaTime
-            )
+        grabbable.ServerThrow(
+            direction.normalized,
+            Mathf.Clamp01(normalizedCharge)
         );
     }
 
     // ---------------------------------------------------------
-    // DETECTION
+    // HELPERS
     // ---------------------------------------------------------
+
+    private bool TryGetGrabbable(
+        ulong networkObjectId,
+        out GrabbableObject grabbable)
+    {
+        grabbable = null;
+
+        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects
+                .TryGetValue(
+                    networkObjectId,
+                    out NetworkObject networkObject))
+        {
+            return false;
+        }
+
+        grabbable =
+            networkObject.GetComponent<GrabbableObject>();
+
+        return grabbable != null;
+    }
 
     private GrabbableObject GetCurrentGrabbable()
     {
@@ -424,114 +495,57 @@ public class PickupController : NetworkBehaviour
         if (target == null)
             return null;
 
-        if (target.Type != Interactable.InteractionType.Grabbable)
+        if (target.Type !=
+            Interactable.InteractionType.Grabbable)
+        {
             return null;
+        }
 
         return target.GetComponent<GrabbableObject>();
     }
 
-    // ---------------------------------------------------------
-    // COLLISION
-    // ---------------------------------------------------------
-
-    private void ConfigureHeldCollision()
+    private void ClearHeldState()
     {
-        if (heldObject == null)
-            return;
+        heldObject = null;
+        pickupTarget = null;
 
-        heldColliders =
-            heldObject.GetComponentsInChildren<Collider>();
+        pickupTimer = 0f;
+        throwChargeTimer = 0f;
 
-        if (!heldObject.WorldCollisionWhileHeld)
-        {
-            foreach (Collider objectCollider in heldColliders)
-            {
-                if (objectCollider == null)
-                    continue;
-
-                objectCollider.enabled = false;
-            }
-
-            return;
-        }
-
-        if (playerCollider == null)
-            return;
-
-        foreach (Collider objectCollider in heldColliders)
-        {
-            if (objectCollider == null)
-                continue;
-
-            Physics.IgnoreCollision(
-                playerCollider,
-                objectCollider,
-                true
-            );
-        }
+        pickupState =
+            PickupState.None;
     }
-
-    private void RestoreHeldCollision()
-    {
-        if (heldObject == null || heldColliders == null)
-            return;
-
-        if (!heldObject.WorldCollisionWhileHeld)
-        {
-            foreach (Collider objectCollider in heldColliders)
-            {
-                if (objectCollider == null)
-                    continue;
-
-                objectCollider.enabled = true;
-            }
-
-            return;
-        }
-
-        if (playerCollider == null)
-            return;
-
-        foreach (Collider objectCollider in heldColliders)
-        {
-            if (objectCollider == null)
-                continue;
-
-            Physics.IgnoreCollision(
-                playerCollider,
-                objectCollider,
-                false
-            );
-        }
-    }
-
-    // ---------------------------------------------------------
-    // UI
-    // ---------------------------------------------------------
 
     private void UpdateInteractionUI()
     {
         if (interactionUI == null)
             return;
 
-        if (pickupState == PickupState.Held ||
-            pickupState == PickupState.ChargingThrow)
+        if (pickupState != PickupState.None)
         {
             interactionUI.HidePrompt();
             return;
         }
 
-        if (pickupState == PickupState.PickingUp)
-        {
-            interactionUI.HidePrompt();
-            return;
-        }
-
-        GrabbableObject target = GetCurrentGrabbable();
+        GrabbableObject target =
+            GetCurrentGrabbable();
 
         if (target != null)
             interactionUI.ShowPickupPrompt(target);
         else
             interactionUI.HidePrompt();
+    }
+
+    private static ClientRpcParams ClientRpcParamsFrom(
+        ulong clientId)
+    {
+        return new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds =
+                    new[] { clientId }
+            }
+        };
     }
 }
