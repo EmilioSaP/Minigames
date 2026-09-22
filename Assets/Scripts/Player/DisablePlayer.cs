@@ -4,6 +4,7 @@ public class DisablePlayer : MonoBehaviour
 {
     [SerializeField] private PlayerMovement playerMovement;
     [SerializeField] private PlayerTurning playerTurning;
+    [SerializeField] private PickupController pickupController;
 
     public void SetPlayerEnabled(bool state)
     {
@@ -12,5 +13,8 @@ public class DisablePlayer : MonoBehaviour
 
         if (playerTurning != null)
             playerTurning.SetLookMode(state);
+
+        if (pickupController != null)
+            pickupController.SetInteractionEnabled(state);
     }
 }

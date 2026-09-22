@@ -1090,6 +1090,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DisablePlayer
   playerMovement: {fileID: 565810354642723345}
   playerTurning: {fileID: 5925359814520446568}
+  pickupController: {fileID: 4753415245385795371}
 --- !u!114 &4753415245385795371
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1847,13 +1848,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7083482584495791514}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: -0, y: -0.73, z: -0.316}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0.7071068, w: 0}
+  m_LocalPosition: {x: 0, y: -0.72999495, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2688604512371057359}
-  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 180, z: 0}
 --- !u!198 &1711679114788440847
 ParticleSystem:
   m_ObjectHideFlags: 0
@@ -1990,7 +1991,7 @@ ParticleSystem:
     startSpeed:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 4
+      scalar: 2
       minScalar: 5
       maxCurve:
         serializedVersion: 2
@@ -2108,7 +2109,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.5
+      scalar: 0.4
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -6671,8 +6672,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovementParticles
   ShowTopMostFoldoutHeaderGroup: 1
   playerMovement: {fileID: 565810354642723345}
-  walkParticleSpeed: 4
-  sprintParticleSpeed: 6
+  walkParticleSpeed: 2
+  sprintParticleSpeed: 3
 --- !u!1 &7757772875682335953
 GameObject:
   m_ObjectHideFlags: 0

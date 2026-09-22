@@ -86,4 +86,5 @@ public class InteractionDetector : MonoBehaviour
         if (CurrentTarget == interactable)
             CurrentTarget = null;
     }
+
 }

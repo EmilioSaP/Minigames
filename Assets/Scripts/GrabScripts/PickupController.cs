@@ -21,6 +21,8 @@ public class PickupController : NetworkBehaviour
     [Header("Throw")]
     [SerializeField] private float minimumThrowCharge = 0.1f;
 
+    private const float MaximumDownwardAngle = 60f;
+
     private InteractionUI interactionUI;
 
     private GrabbableObject heldObject;
@@ -42,6 +44,8 @@ public class PickupController : NetworkBehaviour
         pickupState == PickupState.ChargingThrow;
         
     public Transform GrabPosition => grabPosition;
+
+    private bool interactionEnabled = true;
     
     public float ThrowChargeNormalized
     {
@@ -80,9 +84,13 @@ public class PickupController : NetworkBehaviour
         if (!IsOwner)
             return;
 
+        UpdateGrabPosition();
         UpdateInteractionUI();
 
         if (Mouse.current == null)
+            return;
+
+        if (!interactionEnabled)
             return;
 
         switch (pickupState)
@@ -464,6 +472,48 @@ public class PickupController : NetworkBehaviour
     // HELPERS
     // ---------------------------------------------------------
 
+    private void UpdateGrabPosition()
+    {
+        if (grabPosition == null)
+            return;
+
+        Vector3 offset =
+            grabPosition.position - transform.position;
+
+        float distance = offset.magnitude;
+
+        if (distance <= Mathf.Epsilon)
+            return;
+
+        Vector3 horizontalOffset =
+            Vector3.ProjectOnPlane(offset, Vector3.up);
+
+        float downwardAngle =
+            Mathf.Atan2(
+                -offset.y,
+                horizontalOffset.magnitude
+            ) * Mathf.Rad2Deg;
+
+        if (downwardAngle <= MaximumDownwardAngle)
+            return;
+
+        if (horizontalOffset.sqrMagnitude <= Mathf.Epsilon)
+            horizontalOffset = transform.forward;
+
+        Vector3 horizontalDirection =
+            horizontalOffset.normalized;
+
+        float maximumDownwardAngleRadians =
+            MaximumDownwardAngle * Mathf.Deg2Rad;
+
+        grabPosition.position =
+            transform.position +
+            horizontalDirection *
+                (distance * Mathf.Cos(maximumDownwardAngleRadians)) -
+            Vector3.up *
+                (distance * Mathf.Sin(maximumDownwardAngleRadians));
+    }
+
     private bool TryGetGrabbable(
         ulong networkObjectId,
         out GrabbableObject grabbable)
@@ -501,7 +551,17 @@ public class PickupController : NetworkBehaviour
             return null;
         }
 
-        return target.GetComponent<GrabbableObject>();
+        GrabbableObject grabbable =
+            target.GetComponent<GrabbableObject>();
+
+        if (grabbable == null)
+            return null;
+
+        // Someone is already holding it.
+        if (grabbable.IsHeld)
+            return null;
+
+        return grabbable;
     }
 
     private void ClearHeldState()
@@ -547,5 +607,10 @@ public class PickupController : NetworkBehaviour
                     new[] { clientId }
             }
         };
+    }
+
+    public void SetInteractionEnabled(bool state)
+    {
+        interactionEnabled = state;
     }
 }

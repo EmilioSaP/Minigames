@@ -30,7 +30,9 @@ public class GrabbableObject : NetworkBehaviour
     private Rigidbody objectRigidbody;
     private Collider[] objectColliders;
 
+    // Server-side reference to the holder.
     private Collider holderCollider;
+    private Quaternion heldRotationOffset;
     private Transform grabPosition;
 
     public float PickupTime => pickupTime;
@@ -63,14 +65,15 @@ public class GrabbableObject : NetworkBehaviour
     {
         holderClientId.OnValueChanged += OnHolderChanged;
 
-        if (IsServer)
+        // Apply the current state in case this object
+        // was already held when this client spawned.
+        ApplyLocalCollisionState();
+
+        if (IsServer && objectRigidbody == null)
         {
-            if (objectRigidbody == null)
-            {
-                Debug.LogError(
-                    $"'{name}' has no Rigidbody."
-                );
-            }
+            Debug.LogError(
+                $"'{name}' has no Rigidbody."
+            );
         }
     }
 
@@ -125,6 +128,11 @@ public class GrabbableObject : NetworkBehaviour
 
         grabPosition = pickupController.GrabPosition;
 
+        heldRotationOffset =
+            Quaternion.Inverse(
+                Quaternion.Euler(0f, client.PlayerObject.transform.eulerAngles.y, 0f)
+            ) * transform.rotation;
+
         if (grabPosition == null)
         {
             Debug.LogWarning(
@@ -134,7 +142,6 @@ public class GrabbableObject : NetworkBehaviour
             return false;
         }
 
-        // Validate against the actual hand/hold position.
         float distance =
             Vector3.Distance(
                 grabPosition.position,
@@ -144,10 +151,12 @@ public class GrabbableObject : NetworkBehaviour
         if (distance > 5f)
             return false;
 
-        holderClientId.Value = clientId;
-
+        // Set this before changing the NetworkVariable so the
+        // server's OnHolderChanged callback has the reference.
         holderCollider =
             client.PlayerObject.GetComponent<Collider>();
+
+        holderClientId.Value = clientId;
 
         ConfigureHeldPhysics();
 
@@ -159,21 +168,51 @@ public class GrabbableObject : NetworkBehaviour
     // ---------------------------------------------------------
 
     private void UpdateHeldObject()
+{
+    if (grabPosition == null)
     {
+        FindGrabPosition();
+
         if (grabPosition == null)
-            {
-                FindGrabPosition();
-
-                if (grabPosition == null)
-                    return;
-            }
-
-        Vector3 targetPosition =
-            grabPosition.position +
-            grabPosition.TransformVector(HeldOffset);
-
-        objectRigidbody.position = targetPosition;
+            return;
     }
+
+    // Position
+    Vector3 targetPosition =
+        grabPosition.position +
+        grabPosition.TransformVector(HeldOffset);
+
+    objectRigidbody.position = targetPosition;
+
+    // Rotation
+    if (holderClientId.Value != NoHolder &&
+        NetworkManager.Singleton.ConnectedClients
+            .TryGetValue(
+                holderClientId.Value,
+                out NetworkClient holderClient))
+    {
+        if (holderClient.PlayerObject != null)
+        {
+            float holderYaw =
+                holderClient.PlayerObject
+                    .transform.eulerAngles.y;
+
+            Quaternion holderRotation =
+                Quaternion.Euler(
+                    0f,
+                    holderYaw,
+                    0f
+                );
+
+            Quaternion targetRotation =
+                holderRotation *
+                heldRotationOffset;
+
+            objectRigidbody.rotation =
+                targetRotation;
+        }
+    }
+}
 
     private void FindGrabPosition()
     {
@@ -195,8 +234,10 @@ public class GrabbableObject : NetworkBehaviour
             client.PlayerObject.GetComponent<PickupController>();
 
         if (pickupController != null)
+        {
             grabPosition =
                 pickupController.GrabPosition;
+        }
     }
 
     // ---------------------------------------------------------
@@ -217,6 +258,7 @@ public class GrabbableObject : NetworkBehaviour
 
         holderCollider = null;
         grabPosition = null;
+        heldRotationOffset = Quaternion.identity;
     }
 
     // ---------------------------------------------------------
@@ -247,6 +289,7 @@ public class GrabbableObject : NetworkBehaviour
 
         holderCollider = null;
         grabPosition = null;
+        heldRotationOffset = Quaternion.identity;
 
         objectRigidbody.linearVelocity = Vector3.zero;
         objectRigidbody.angularVelocity = Vector3.zero;
@@ -268,31 +311,10 @@ public class GrabbableObject : NetworkBehaviour
 
         objectRigidbody.isKinematic = true;
 
-        if (!worldCollisionWhileHeld)
-        {
-            foreach (Collider collider in objectColliders)
-            {
-                if (collider != null)
-                    collider.enabled = false;
-            }
-
-            return;
-        }
-
-        if (holderCollider == null)
-            return;
-
-        foreach (Collider collider in objectColliders)
-        {
-            if (collider == null)
-                continue;
-
-            Physics.IgnoreCollision(
-                holderCollider,
-                collider,
-                true
-            );
-        }
+        // Collision configuration is also applied through
+        // OnHolderChanged so every client gets the proper
+        // local collision state.
+        ApplyLocalCollisionState();
     }
 
     private void RestorePhysics()
@@ -323,9 +345,79 @@ public class GrabbableObject : NetworkBehaviour
         objectRigidbody.isKinematic = false;
     }
 
+    // ---------------------------------------------------------
+    // LOCAL COLLISION STATE
+    // ---------------------------------------------------------
+
+    private void ApplyLocalCollisionState()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        // -----------------------------------------------------
+        // Objects that should have NO world collision while held
+        // -----------------------------------------------------
+
+        if (!worldCollisionWhileHeld)
+        {
+            bool shouldDisableColliders = IsHeld;
+
+            foreach (Collider collider in objectColliders)
+            {
+                if (collider == null)
+                    continue;
+
+                collider.enabled = !shouldDisableColliders;
+            }
+
+            return;
+        }
+
+        // -----------------------------------------------------
+        // Objects that keep world collision
+        // -----------------------------------------------------
+
+        NetworkClient localClient =
+            NetworkManager.Singleton.LocalClient;
+
+        if (localClient == null ||
+            localClient.PlayerObject == null)
+        {
+            return;
+        }
+
+        Collider localPlayerCollider =
+            localClient.PlayerObject.GetComponent<Collider>();
+
+        if (localPlayerCollider == null)
+            return;
+
+        bool isLocalHolder =
+            IsHeld &&
+            holderClientId.Value ==
+            NetworkManager.Singleton.LocalClientId;
+
+        foreach (Collider collider in objectColliders)
+        {
+            if (collider == null)
+                continue;
+
+            Physics.IgnoreCollision(
+                localPlayerCollider,
+                collider,
+                isLocalHolder
+            );
+        }
+    }
+
+    // ---------------------------------------------------------
+    // NETWORK STATE CHANGE
+    // ---------------------------------------------------------
+
     private void OnHolderChanged(
         ulong previousHolder,
         ulong newHolder)
     {
+        ApplyLocalCollisionState();
     }
 }
