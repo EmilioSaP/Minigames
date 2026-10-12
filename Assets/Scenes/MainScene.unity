@@ -3666,12 +3666,12 @@ RectTransform:
   m_Children:
   - {fileID: 778432565}
   - {fileID: 1127513359}
-  - {fileID: 1220767138}
   - {fileID: 1916183686}
   - {fileID: 1458537238}
   - {fileID: 795952727}
   - {fileID: 509908587}
   - {fileID: 1083928336}
+  - {fileID: 1220767138}
   m_Father: {fileID: 1096497218}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
