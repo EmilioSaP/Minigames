@@ -20,9 +20,12 @@ public class PickupController : MonoBehaviour
     [Header("Throw")]
     [SerializeField] private float minimumThrowCharge = 0.1f;
 
-    private const float MaximumDownwardAngle = 60f;
+    private const float MaximumDownwardAngle = 50f;
+    private const float GrabPositionReturnSpeed = 5f;
 
     private InteractionUI interactionUI;
+    private Vector3 initialGrabPositionLocal;
+    private Vector3 initialGrabPositionWorld;
 
     private PickupState pickupState = PickupState.None;
 
@@ -66,6 +69,12 @@ public class PickupController : MonoBehaviour
 
     private void Start()
     {
+        if (grabPosition != null)
+        {
+            initialGrabPositionLocal = grabPosition.localPosition;
+            initialGrabPositionWorld = grabPosition.position;
+        }
+
         ResolveInteractionUI();
     }
 
@@ -368,8 +377,12 @@ public class PickupController : MonoBehaviour
         if (grabPosition == null)
             return;
 
+        Vector3 targetPosition = grabPosition.parent != null
+            ? grabPosition.parent.TransformPoint(initialGrabPositionLocal)
+            : initialGrabPositionWorld;
+
         Vector3 offset =
-            grabPosition.position - transform.position;
+            targetPosition - transform.position;
 
         float distance = offset.magnitude;
 
@@ -384,22 +397,30 @@ public class PickupController : MonoBehaviour
             horizontalOffset.magnitude
         ) * Mathf.Rad2Deg;
 
-        if (downwardAngle <= MaximumDownwardAngle)
+        if (downwardAngle > MaximumDownwardAngle)
+        {
+            Vector3 horizontalDirection = Vector3.ProjectOnPlane(
+                transform.forward,
+                Vector3.up
+            ).normalized;
+
+            float angleRadians =
+                MaximumDownwardAngle * Mathf.Deg2Rad;
+
+            targetPosition =
+                transform.position +
+                horizontalDirection * (distance * Mathf.Cos(angleRadians)) -
+                Vector3.up * (distance * Mathf.Sin(angleRadians));
+
+            grabPosition.position = targetPosition;
             return;
+        }
 
-        if (horizontalOffset.sqrMagnitude <= Mathf.Epsilon)
-            horizontalOffset = transform.forward;
-
-        Vector3 horizontalDirection =
-            horizontalOffset.normalized;
-
-        float angleRadians =
-            MaximumDownwardAngle * Mathf.Deg2Rad;
-
-        grabPosition.position =
-            transform.position +
-            horizontalDirection * (distance * Mathf.Cos(angleRadians)) -
-            Vector3.up * (distance * Mathf.Sin(angleRadians));
+        grabPosition.position = Vector3.MoveTowards(
+            grabPosition.position,
+            targetPosition,
+            GrabPositionReturnSpeed * Time.deltaTime
+        );
     }
 
     // ---------------------------------------------------------

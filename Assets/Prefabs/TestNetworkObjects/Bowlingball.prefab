@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 3329929129452440733}
   - component: {fileID: 8417081287232874442}
   - component: {fileID: 2328575726038755132}
+  - component: {fileID: 8455266180461030756}
   m_Layer: 0
   m_Name: Bowlingball
   m_TagString: Untagged
@@ -281,3 +282,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkGrabbableInteraction
   ShowTopMostFoldoutHeaderGroup: 1
+--- !u!65 &8455266180461030756
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2871897781850118791}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2, z: 2}
+  m_Center: {x: 0, y: 0, z: 0}
