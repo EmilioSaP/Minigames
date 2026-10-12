@@ -753,6 +753,7 @@ GameObject:
   - component: {fileID: 4854004384682210410}
   - component: {fileID: 6376116057119416850}
   - component: {fileID: 4753415245385795371}
+  - component: {fileID: 8652397245420117743}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -850,7 +851,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2074510670
+  GlobalObjectIdHash: 442197133
   InScenePlacedSourceGlobalObjectIdHash: 3758220817
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -1103,11 +1104,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 068477a3df5a1fc4ab87de3d4537a09f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PickupController
-  ShowTopMostFoldoutHeaderGroup: 1
   interactionDetector: {fileID: 8139366017273182291}
   grabPosition: {fileID: 7769707808994509726}
   playerView: {fileID: 8151291194530539455}
   minimumThrowCharge: 0.1
+--- !u!114 &8652397245420117743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3090838943776890950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0923fb7cd85d48349bd3517306dab962, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkPickupInputGate
+  ShowTopMostFoldoutHeaderGroup: 1
+  pickupController: {fileID: 4753415245385795371}
 --- !u!1 &5010893481299667180
 GameObject:
   m_ObjectHideFlags: 0

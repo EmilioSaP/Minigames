@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 7447685048892074530}
   - component: {fileID: 4961162565489768825}
   - component: {fileID: 3445119014885312283}
+  - component: {fileID: -2640322465794447972}
   m_Layer: 0
   m_Name: Crate
   m_TagString: Untagged
@@ -184,7 +185,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb3f1e6575667dc4d8fc34c0cf0ad5a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrabbableObject
-  ShowTopMostFoldoutHeaderGroup: 1
   pickupTime: 1
   heldOffset: {x: 0, y: 0, z: 0}
   worldCollisionWhileHeld: 1
@@ -268,3 +268,16 @@ MonoBehaviour:
   UseRigidBodyForMotion: 0
   AutoUpdateKinematicState: 1
   AutoSetKinematicOnDespawn: 1
+--- !u!114 &-2640322465794447972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2857717830904089621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 141d4e0d2f2f8e744943e1d77e60a7fa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkGrabbableInteraction
+  ShowTopMostFoldoutHeaderGroup: 1

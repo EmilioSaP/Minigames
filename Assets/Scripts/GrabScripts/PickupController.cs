@@ -1,13 +1,13 @@
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PickupController : NetworkBehaviour
+public class PickupController : MonoBehaviour
 {
     private enum PickupState
     {
         None,
         PickingUp,
+        RequestingPickup,
         Held,
         ChargingThrow
     }
@@ -17,7 +17,6 @@ public class PickupController : NetworkBehaviour
     [SerializeField] private Transform grabPosition;
     [SerializeField] private GameObject playerView;
 
-
     [Header("Throw")]
     [SerializeField] private float minimumThrowCharge = 0.1f;
 
@@ -25,28 +24,30 @@ public class PickupController : NetworkBehaviour
 
     private InteractionUI interactionUI;
 
-    private GrabbableObject heldObject;
-
     private PickupState pickupState = PickupState.None;
 
     private GrabbableObject pickupTarget;
     private float pickupTimer;
 
-    private float throwChargeTimer;
+    private GrabbableObject pendingPickup;
+    private IGrabbableInteraction pendingInteraction;
 
-    public bool IsHoldingObject =>
-        heldObject != null;
+    private GrabbableObject heldObject;
+    private IGrabbableInteraction heldInteraction;
+
+    private float throwChargeTimer;
+    private bool interactionEnabled = true;
+
+    public Transform GrabPosition => grabPosition;
+
+    public bool IsHoldingObject => heldObject != null;
 
     public bool IsPickingUp =>
         pickupState == PickupState.PickingUp;
 
     public bool IsChargingThrow =>
         pickupState == PickupState.ChargingThrow;
-        
-    public Transform GrabPosition => grabPosition;
 
-    private bool interactionEnabled = true;
-    
     public float ThrowChargeNormalized
     {
         get
@@ -58,39 +59,28 @@ public class PickupController : NetworkBehaviour
                 return 1f;
 
             return Mathf.Clamp01(
-                throwChargeTimer /
-                heldObject.ThrowChargeTime
+                throwChargeTimer / heldObject.ThrowChargeTime
             );
         }
     }
 
-    public override void OnNetworkSpawn()
+    private void Start()
     {
-        if (!IsOwner)
-            return;
+        ResolveInteractionUI();
+    }
 
-        interactionUI = InteractionUI.Instance;
-
-        if (interactionUI == null)
-        {
-            Debug.LogWarning(
-                "PickupController could not find InteractionUI.Instance."
-            );
-        }
+    private void OnDisable()
+    {
+        UnsubscribeFromPickupResult();
     }
 
     private void Update()
     {
-        if (!IsOwner)
-            return;
-
+        ResolveInteractionUI();
         UpdateGrabPosition();
         UpdateInteractionUI();
 
-        if (Mouse.current == null)
-            return;
-
-        if (!interactionEnabled)
+        if (!interactionEnabled || Mouse.current == null)
             return;
 
         switch (pickupState)
@@ -101,6 +91,11 @@ public class PickupController : NetworkBehaviour
 
             case PickupState.PickingUp:
                 HandlePickupProgress();
+                break;
+
+            case PickupState.RequestingPickup:
+                // Wait for the interaction implementation
+                // to report whether the server accepted the pickup.
                 break;
 
             case PickupState.Held:
@@ -114,7 +109,7 @@ public class PickupController : NetworkBehaviour
     }
 
     // ---------------------------------------------------------
-    // IDLE
+    // IDLE AND PICKUP TIMING
     // ---------------------------------------------------------
 
     private void HandleIdleInput()
@@ -122,34 +117,23 @@ public class PickupController : NetworkBehaviour
         if (!Mouse.current.leftButton.wasPressedThisFrame)
             return;
 
-        GrabbableObject target =
-            GetCurrentGrabbable();
+        GrabbableObject target = GetCurrentGrabbable();
 
         if (target == null)
             return;
 
-        StartPickup(target);
-    }
-
-    private void StartPickup(
-        GrabbableObject target)
-    {
         pickupTarget = target;
         pickupTimer = 0f;
 
         if (target.PickupTime <= 0f)
         {
             RequestPickup(target);
-            return;
         }
-
-        pickupState =
-            PickupState.PickingUp;
+        else
+        {
+            pickupState = PickupState.PickingUp;
+        }
     }
-
-    // ---------------------------------------------------------
-    // PICKUP
-    // ---------------------------------------------------------
 
     private void HandlePickupProgress()
     {
@@ -159,10 +143,7 @@ public class PickupController : NetworkBehaviour
             return;
         }
 
-        GrabbableObject currentTarget =
-            GetCurrentGrabbable();
-
-        if (currentTarget != pickupTarget)
+        if (GetCurrentGrabbable() != pickupTarget)
         {
             CancelPickup();
             return;
@@ -184,118 +165,91 @@ public class PickupController : NetworkBehaviour
     }
 
     // ---------------------------------------------------------
-    // NETWORKED PICKUP
+    // PICKUP REQUEST
     // ---------------------------------------------------------
 
-    private void RequestPickup(
-        GrabbableObject target)
+    private void RequestPickup(GrabbableObject target)
     {
-        if (target == null)
+        if (target == null ||
+            !target.TryGetInteraction(out IGrabbableInteraction interaction))
         {
             CancelPickup();
             return;
         }
 
-        NetworkObject networkObject =
-            target.GetComponent<NetworkObject>();
+        pendingPickup = target;
+        pendingInteraction = interaction;
 
-        if (networkObject == null)
-        {
-            Debug.LogWarning(
-                $"'{target.name}' has no NetworkObject."
-            );
+        // Change state before requesting the pickup because
+        // the local implementation can respond synchronously.
+        pickupState = PickupState.RequestingPickup;
 
-            CancelPickup();
-            return;
-        }
+        interaction.PickupRequestResolved +=
+            OnPickupRequestResolved;
 
-        RequestPickupServerRpc(
-            networkObject.NetworkObjectId
-        );
+        interaction.RequestPickup(this);
 
         pickupTarget = null;
         pickupTimer = 0f;
-        pickupState = PickupState.Held;
-
-        heldObject = target;
     }
 
-    [ServerRpc]
-    private void RequestPickupServerRpc(
-        ulong networkObjectId,
-        ServerRpcParams rpcParams = default)
+    private void OnPickupRequestResolved(bool accepted)
     {
-        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects
-                .TryGetValue(
-                    networkObjectId,
-                    out NetworkObject networkObject))
+        GrabbableObject target = pendingPickup;
+        IGrabbableInteraction interaction = pendingInteraction;
+
+        UnsubscribeFromPickupResult();
+
+        pendingPickup = null;
+        pendingInteraction = null;
+
+        if (accepted && target != null && interaction != null)
         {
-            return;
+            heldObject = target;
+            heldInteraction = interaction;
+
+            throwChargeTimer = 0f;
+            pickupState = PickupState.Held;
         }
-
-        GrabbableObject grabbable =
-            networkObject.GetComponent<GrabbableObject>();
-
-        if (grabbable == null)
-            return;
-
-        bool success =
-            grabbable.TryPickup(
-                rpcParams.Receive.SenderClientId
-            );
-
-        if (!success)
+        else
         {
-            NotifyPickupFailedClientRpc(
-                ClientRpcParamsFrom(
-                    rpcParams.Receive.SenderClientId
-                )
-            );
+            ClearHeldState();
         }
     }
 
-    [ClientRpc]
-    private void NotifyPickupFailedClientRpc(
-        ClientRpcParams clientRpcParams)
+    private void UnsubscribeFromPickupResult()
     {
-        if (!IsOwner)
-            return;
-
-        heldObject = null;
-        pickupState = PickupState.None;
+        if (pendingInteraction != null)
+        {
+            pendingInteraction.PickupRequestResolved -=
+                OnPickupRequestResolved;
+        }
     }
 
     // ---------------------------------------------------------
-    // HOLDING
+    // HELD OBJECT AND THROW CHARGING
     // ---------------------------------------------------------
 
     private void HandleHeldInput()
     {
-        if (!Mouse.current.leftButton.wasPressedThisFrame)
+        if (heldObject == null || heldInteraction == null)
+        {
+            ClearHeldState();
             return;
+        }
 
-        StartThrowCharge();
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            throwChargeTimer = 0f;
+            pickupState = PickupState.ChargingThrow;
+        }
     }
-
-    private void StartThrowCharge()
-    {
-        if (heldObject == null)
-            return;
-
-        throwChargeTimer = 0f;
-        pickupState =
-            PickupState.ChargingThrow;
-    }
-
-    // ---------------------------------------------------------
-    // THROW CHARGE
-    // ---------------------------------------------------------
 
     private void HandleThrowCharge()
     {
-        if (heldObject == null)
+        if (heldObject == null || heldInteraction == null)
         {
-            pickupState = PickupState.None;
+            ClearHeldState();
             return;
         }
 
@@ -303,13 +257,10 @@ public class PickupController : NetworkBehaviour
         {
             if (heldObject.ThrowChargeTime > 0f)
             {
-                throwChargeTimer += Time.deltaTime;
-
-                throwChargeTimer =
-                    Mathf.Min(
-                        throwChargeTimer,
-                        heldObject.ThrowChargeTime
-                    );
+                throwChargeTimer = Mathf.Min(
+                    throwChargeTimer + Time.deltaTime,
+                    heldObject.ThrowChargeTime
+                );
             }
 
             return;
@@ -320,24 +271,33 @@ public class PickupController : NetworkBehaviour
 
     private void ReleaseThrow()
     {
-        if (heldObject == null)
+        if (heldObject == null || heldInteraction == null)
         {
             ClearHeldState();
             return;
         }
 
-        float normalizedCharge =
-            GetThrowCharge();
+        float charge = GetThrowCharge();
 
-        if (normalizedCharge <
-            minimumThrowCharge)
+        if (charge < minimumThrowCharge)
         {
-            RequestDrop();
+            heldInteraction.RequestDrop(this, heldObject);
         }
         else
         {
-            RequestThrow(normalizedCharge);
+            Vector3 direction = playerView != null
+                ? playerView.transform.forward.normalized
+                : transform.forward;
+
+            heldInteraction.RequestThrow(
+                this,
+                heldObject,
+                direction,
+                charge
+            );
         }
+
+        ClearHeldState();
     }
 
     private float GetThrowCharge()
@@ -349,127 +309,58 @@ public class PickupController : NetworkBehaviour
             return 1f;
 
         return Mathf.Clamp01(
-            throwChargeTimer /
-            heldObject.ThrowChargeTime
+            throwChargeTimer / heldObject.ThrowChargeTime
         );
     }
 
-    // ---------------------------------------------------------
-    // NETWORKED DROP
-    // ---------------------------------------------------------
-
-    private void RequestDrop()
+    private void ClearHeldState()
     {
-        if (heldObject == null)
-            return;
+        heldObject = null;
+        heldInteraction = null;
 
-        NetworkObject networkObject =
-            heldObject.GetComponent<NetworkObject>();
+        pickupTarget = null;
+        pickupTimer = 0f;
+        throwChargeTimer = 0f;
 
-        if (networkObject == null)
-        {
-            ClearHeldState();
-            return;
-        }
-
-        RequestDropServerRpc(
-            networkObject.NetworkObjectId
-        );
-
-        ClearHeldState();
-    }
-
-    [ServerRpc]
-    private void RequestDropServerRpc(
-        ulong networkObjectId,
-        ServerRpcParams rpcParams = default)
-    {
-        if (!TryGetGrabbable(
-                networkObjectId,
-                out GrabbableObject grabbable))
-        {
-            return;
-        }
-
-        if (!grabbable.IsHeld)
-            return;
-
-        if (grabbable.HolderClientId !=
-            rpcParams.Receive.SenderClientId)
-        {
-            return;
-        }
-
-        grabbable.ServerDrop();
+        pickupState = PickupState.None;
     }
 
     // ---------------------------------------------------------
-    // NETWORKED THROW
+    // TARGET DETECTION
     // ---------------------------------------------------------
 
-    private void RequestThrow(
-        float normalizedCharge)
+    private GrabbableObject GetCurrentGrabbable()
     {
-        if (heldObject == null)
-            return;
+        if (interactionDetector == null)
+            return null;
 
-        NetworkObject networkObject =
-            heldObject.GetComponent<NetworkObject>();
+        Interactable target =
+            interactionDetector.CurrentTarget;
 
-        if (networkObject == null)
+        if (target == null ||
+            target.Type != Interactable.InteractionType.Grabbable)
         {
-            ClearHeldState();
-            return;
+            return null;
         }
 
-        Vector3 direction =
-            playerView != null
-                ? playerView.transform.forward.normalized
-                : transform.forward;
+        GrabbableObject grabbable =
+            target.GetComponent<GrabbableObject>();
 
-        RequestThrowServerRpc(
-            networkObject.NetworkObjectId,
-            direction,
-            normalizedCharge
-        );
-
-        ClearHeldState();
-    }
-
-    [ServerRpc]
-    private void RequestThrowServerRpc(
-        ulong networkObjectId,
-        Vector3 direction,
-        float normalizedCharge,
-        ServerRpcParams rpcParams = default)
-    {
-        if (!TryGetGrabbable(
-                networkObjectId,
-                out GrabbableObject grabbable))
+        if (grabbable == null ||
+            !grabbable.TryGetInteraction(
+                out IGrabbableInteraction interaction))
         {
-            return;
+            return null;
         }
 
-        if (!grabbable.IsHeld)
-            return;
+        if (interaction.IsHeld)
+            return null;
 
-        if (grabbable.HolderClientId !=
-            rpcParams.Receive.SenderClientId)
-        {
-            return;
-        }
-
-        if (direction.sqrMagnitude < 0.01f)
-            direction = Vector3.forward;
-
-        grabbable.ServerThrow(
-            direction.normalized,
-            Mathf.Clamp01(normalizedCharge)
-        );
+        return grabbable;
     }
 
     // ---------------------------------------------------------
-    // HELPERS
+    // GRAB POSITION RESTRICTION
     // ---------------------------------------------------------
 
     private void UpdateGrabPosition()
@@ -488,11 +379,10 @@ public class PickupController : NetworkBehaviour
         Vector3 horizontalOffset =
             Vector3.ProjectOnPlane(offset, Vector3.up);
 
-        float downwardAngle =
-            Mathf.Atan2(
-                -offset.y,
-                horizontalOffset.magnitude
-            ) * Mathf.Rad2Deg;
+        float downwardAngle = Mathf.Atan2(
+            -offset.y,
+            horizontalOffset.magnitude
+        ) * Mathf.Rad2Deg;
 
         if (downwardAngle <= MaximumDownwardAngle)
             return;
@@ -503,77 +393,23 @@ public class PickupController : NetworkBehaviour
         Vector3 horizontalDirection =
             horizontalOffset.normalized;
 
-        float maximumDownwardAngleRadians =
+        float angleRadians =
             MaximumDownwardAngle * Mathf.Deg2Rad;
 
         grabPosition.position =
             transform.position +
-            horizontalDirection *
-                (distance * Mathf.Cos(maximumDownwardAngleRadians)) -
-            Vector3.up *
-                (distance * Mathf.Sin(maximumDownwardAngleRadians));
+            horizontalDirection * (distance * Mathf.Cos(angleRadians)) -
+            Vector3.up * (distance * Mathf.Sin(angleRadians));
     }
 
-    private bool TryGetGrabbable(
-        ulong networkObjectId,
-        out GrabbableObject grabbable)
+    // ---------------------------------------------------------
+    // UI AND EXTERNAL CONTROL
+    // ---------------------------------------------------------
+
+    private void ResolveInteractionUI()
     {
-        grabbable = null;
-
-        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects
-                .TryGetValue(
-                    networkObjectId,
-                    out NetworkObject networkObject))
-        {
-            return false;
-        }
-
-        grabbable =
-            networkObject.GetComponent<GrabbableObject>();
-
-        return grabbable != null;
-    }
-
-    private GrabbableObject GetCurrentGrabbable()
-    {
-        if (interactionDetector == null)
-            return null;
-
-        Interactable target =
-            interactionDetector.CurrentTarget;
-
-        if (target == null)
-            return null;
-
-        if (target.Type !=
-            Interactable.InteractionType.Grabbable)
-        {
-            return null;
-        }
-
-        GrabbableObject grabbable =
-            target.GetComponent<GrabbableObject>();
-
-        if (grabbable == null)
-            return null;
-
-        // Someone is already holding it.
-        if (grabbable.IsHeld)
-            return null;
-
-        return grabbable;
-    }
-
-    private void ClearHeldState()
-    {
-        heldObject = null;
-        pickupTarget = null;
-
-        pickupTimer = 0f;
-        throwChargeTimer = 0f;
-
-        pickupState =
-            PickupState.None;
+        if (interactionUI == null)
+            interactionUI = InteractionUI.Instance;
     }
 
     private void UpdateInteractionUI()
@@ -587,8 +423,7 @@ public class PickupController : NetworkBehaviour
             return;
         }
 
-        GrabbableObject target =
-            GetCurrentGrabbable();
+        GrabbableObject target = GetCurrentGrabbable();
 
         if (target != null)
             interactionUI.ShowPickupPrompt(target);
@@ -596,21 +431,11 @@ public class PickupController : NetworkBehaviour
             interactionUI.HidePrompt();
     }
 
-    private static ClientRpcParams ClientRpcParamsFrom(
-        ulong clientId)
-    {
-        return new ClientRpcParams
-        {
-            Send = new ClientRpcSendParams
-            {
-                TargetClientIds =
-                    new[] { clientId }
-            }
-        };
-    }
-
     public void SetInteractionEnabled(bool state)
     {
         interactionEnabled = state;
+
+        if (!state && interactionUI != null)
+            interactionUI.HidePrompt();
     }
 }
