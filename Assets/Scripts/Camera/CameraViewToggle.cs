@@ -19,6 +19,8 @@ public class CameraViewToggle : NetworkBehaviour
     [SerializeField] private GameObject playerVisualHat;
     [SerializeField] private GameObject playerNameTag;
 
+    private bool viewChangeEnabled = true;
+
     [Header("Third Person Offsets")]
     [SerializeField] private List<Vector3> offsets = new List<Vector3>
     {
@@ -46,6 +48,9 @@ public class CameraViewToggle : NetworkBehaviour
     private void Update()
     {
         if (!IsOwner)
+            return;
+
+        if (!viewChangeEnabled)
             return;
 
         if (Keyboard.current == null)
@@ -106,5 +111,10 @@ public class CameraViewToggle : NetworkBehaviour
 
         if (offsets.Count > offsetIndex)
             cameraTransform.localPosition = offsets[offsetIndex];
+    }
+
+    public void SetCameraToggable(bool state)
+    {
+        viewChangeEnabled = state;
     }
 }
