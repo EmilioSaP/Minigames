@@ -86,9 +86,6 @@ public class ConnectionManager : MonoBehaviour
         if (leaveButton != null)
             leaveButton.SetActive(false);
 
-        if (joinCodeTextField != null)
-            joinCodeTextField.gameObject.SetActive(false);
-
         if (statusText != null)
             statusText.text = "Disconnected from host. You can join another game.";
 
@@ -122,22 +119,21 @@ public class ConnectionManager : MonoBehaviour
     }
 
     private void ResetConnectionUI(string message)
-{
-    if (leaveButton != null)
-        leaveButton.SetActive(false);
-
-    if (joinCodeTextField != null)
     {
-        joinCodeTextField.text = "";
-        joinCodeTextField.gameObject.SetActive(false);
+        if (leaveButton != null)
+            leaveButton.SetActive(false);
+
+        if (joinCodeTextField != null)
+        {
+            joinCodeTextField.text = "";
+        }
+
+        if (joinCodeText != null)
+            joinCodeText.text = "";
+
+        if (statusText != null)
+            statusText.text = message;
     }
-
-    if (joinCodeText != null)
-        joinCodeText.text = "";
-
-    if (statusText != null)
-        statusText.text = message;
-}
 
     private async Task InitializeServices()
     {
@@ -200,7 +196,6 @@ public class ConnectionManager : MonoBehaviour
                 joinCodeText.text = $"Join Code: {joinCode}";
                 statusText.text = "Hosting game!";
                 //enable the gamobject containing the joinCodeTextField so that the player can copy the join code
-                joinCodeTextField.gameObject.SetActive(true);
                 joinCodeTextField.text = joinCode; // Set the input field to the join code for easy copying
 
                 Debug.Log($"HOST STARTED");

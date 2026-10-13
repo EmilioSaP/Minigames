@@ -58,7 +58,7 @@ public class InteractionDetector : MonoBehaviour
             return;
 
         CurrentTarget = interactable;
-        Debug.Log($"Current Target: {CurrentTarget.gameObject.name}");
+        //Debug.Log($"Current Target: {CurrentTarget.gameObject.name}");
     }
 
     private void OnTriggerEnter(Collider other)

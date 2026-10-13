@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 public class PauseGameScript : MonoBehaviour
 {
     [SerializeField] private GameObject pauseUI;
-    [SerializeField] private UnityEvent onPause = new UnityEvent();
-    [SerializeField] private UnityEvent onResume = new UnityEvent();
+    //[SerializeField] private UnityEvent onPause = new UnityEvent();
+    //[SerializeField] private UnityEvent onResume = new UnityEvent();
 
     //[SerializeField] private UnityEvent onPlayerJoin = new UnityEvent();
     //[SerializeField] private UnityEvent onPlayerLeave = new UnityEvent();
@@ -45,6 +45,7 @@ public class PauseGameScript : MonoBehaviour
         //onPlayerJoin.Invoke();
         enablePause = true;
         isPaused = false;
+        pauseUI.SetActive(false);
     }
 
     private void OnLocalPlayerLeft()
@@ -53,6 +54,8 @@ public class PauseGameScript : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         //onPlayerLeave.Invoke();
         enablePause = false;
+        isPaused = false;
+        pauseUI.SetActive(false);
     }
 
     public void TogglePause()
@@ -67,11 +70,11 @@ public class PauseGameScript : MonoBehaviour
 
         if (isPaused)
         {
-            onPause.Invoke();
+            //onPause.Invoke();
         }
         else
         {
-            onResume.Invoke();
+            //onResume.Invoke();
         }
 
         if (disablePlayer != null)

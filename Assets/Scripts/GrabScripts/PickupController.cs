@@ -20,7 +20,7 @@ public class PickupController : MonoBehaviour
     [Header("Throw")]
     [SerializeField] private float minimumThrowCharge = 0.1f;
 
-    private const float MaximumDownwardAngle = 50f;
+    private const float MaximumDownwardAngle = 35f;
     private const float GrabPositionReturnSpeed = 5f;
 
     private InteractionUI interactionUI;
