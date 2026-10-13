@@ -2465,8 +2465,8 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 546526012}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -13575.432}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2477,11 +2477,11 @@ RectTransform:
   - {fileID: 104846235}
   - {fileID: 1389093619}
   - {fileID: 1921199304}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1433894082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -636.0276, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!1 &581551104
@@ -5649,10 +5649,10 @@ MonoBehaviour:
   onPlayerLeave:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1995043622}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
+      - m_Target: {fileID: 1995043628}
+        m_TargetAssemblyTypeName: FadeCanvasGroupScript, Assembly-CSharp
+        m_MethodName: FadeIn
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -6582,7 +6582,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2027528661}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1433894082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -6726,6 +6726,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1425945709}
   m_CullTransparentMesh: 1
+--- !u!1 &1433894081
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1433894082}
+  m_Layer: 0
+  m_Name: UI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1433894082
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1433894081}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 636.0276, y: -0, z: 13575.432}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1995043627}
+  - {fileID: 1587779868}
+  - {fileID: 546526017}
+  - {fileID: 1420264409}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1434379075
 GameObject:
   m_ObjectHideFlags: 0
@@ -7618,7 +7653,7 @@ RectTransform:
   m_Children:
   - {fileID: 1434379076}
   - {fileID: 755271304}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1433894082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -9446,6 +9481,7 @@ GameObject:
   - component: {fileID: 1995043625}
   - component: {fileID: 1995043624}
   - component: {fileID: 1995043623}
+  - component: {fileID: 1995043628}
   m_Layer: 5
   m_Name: MAINMENU UI
   m_TagString: Untagged
@@ -9550,13 +9586,26 @@ RectTransform:
   - {fileID: 92333391}
   - {fileID: 322103446}
   - {fileID: 60162120}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1433894082}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1995043628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1995043622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b27ae05f76c2f7e408414814f51a8324, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FadeCanvasGroupScript
+  fadeTime: 0.4
 --- !u!1 &2027528660
 GameObject:
   m_ObjectHideFlags: 0
@@ -9575,7 +9624,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2027528661
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9616,7 +9665,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Press click to pick up box
+  m_text: 
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -10384,10 +10433,7 @@ SceneRoots:
   - {fileID: 764013345}
   - {fileID: 1504472545}
   - {fileID: 1910102034}
-  - {fileID: 1995043627}
-  - {fileID: 1587779868}
-  - {fileID: 546526017}
-  - {fileID: 1420264409}
+  - {fileID: 1433894082}
   - {fileID: 1784429974}
   - {fileID: 1241972787}
   - {fileID: 621303535}

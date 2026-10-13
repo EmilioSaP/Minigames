@@ -7,7 +7,7 @@ public class NetworkObjectSpawn : MonoBehaviour
     [SerializeField] private NetworkObject[] networkObjectPrefabs;
 
     private bool hasSpawnedSessionObjects;
-    private bool isSubscribedToServerStarted;
+    private bool isSubscribedToServerLifecycle;
 
     private void OnEnable()
     {
@@ -16,10 +16,13 @@ public class NetworkObjectSpawn : MonoBehaviour
 
     private void OnDisable()
     {
-        if (NetworkManager.Singleton != null && isSubscribedToServerStarted)
+        if (NetworkManager.Singleton != null && isSubscribedToServerLifecycle)
+        {
             NetworkManager.Singleton.OnServerStarted -= SpawnSessionObjects;
+            NetworkManager.Singleton.OnServerStopped -= ResetSessionObjects;
+        }
 
-        isSubscribedToServerStarted = false;
+        isSubscribedToServerLifecycle = false;
     }
 
     private void Update()
@@ -34,14 +37,20 @@ public class NetworkObjectSpawn : MonoBehaviour
 
     private void SubscribeToServerStarted()
     {
-        if (isSubscribedToServerStarted || NetworkManager.Singleton == null)
+        if (isSubscribedToServerLifecycle || NetworkManager.Singleton == null)
             return;
 
         NetworkManager.Singleton.OnServerStarted += SpawnSessionObjects;
-        isSubscribedToServerStarted = true;
+        NetworkManager.Singleton.OnServerStopped += ResetSessionObjects;
+        isSubscribedToServerLifecycle = true;
 
         if (NetworkManager.Singleton.IsServer)
             SpawnSessionObjects();
+    }
+
+    private void ResetSessionObjects(bool _)
+    {
+        hasSpawnedSessionObjects = false;
     }
 
     private void SpawnSessionObjects()
