@@ -5,6 +5,7 @@ using UnityEngine;
 public class NetworkGameManager : MonoBehaviour
 {
     public static event Action<DisablePlayer> LocalPlayerReady;
+    public static event Action LocalPlayerLeft;
 
     [SerializeField] private NetworkPlayerSpawn playerSpawn;
 
@@ -61,6 +62,9 @@ public class NetworkGameManager : MonoBehaviour
 
     private void OnClientDisconnected(ulong clientId)
     {
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+            LocalPlayerLeft?.Invoke();
+
         if (!NetworkManager.Singleton.IsServer)
             return;
 

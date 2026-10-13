@@ -5748,7 +5748,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 442197133
+  GlobalObjectIdHash: 2074510670
   InScenePlacedSourceGlobalObjectIdHash: 3758220817
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -16493,6 +16493,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2132065402115463308}
+  - component: {fileID: 8297963897508841682}
   m_Layer: 0
   m_Name: CameraPivot
   m_TagString: Untagged
@@ -16518,6 +16519,25 @@ Transform:
   - {fileID: 7769707808994509726}
   m_Father: {fileID: 2688604512371057359}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8297963897508841682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8151291194530539455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c886056ea0129345988b041cde95cde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerNodSync
+  ShowTopMostFoldoutHeaderGroup: 1
+  cameraPivot: {fileID: 2132065402115463308}
+  syncedXRotation:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
 --- !u!1 &8777975149823823723
 GameObject:
   m_ObjectHideFlags: 0

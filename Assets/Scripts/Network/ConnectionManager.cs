@@ -19,11 +19,125 @@ public class ConnectionManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI joinCodeText;
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private TMP_InputField usernameInput;
+    [SerializeField] private GameObject leaveButton;
 
     [Header("Relay")]
     [SerializeField] private int maxConnections = 4;
 
     private bool servicesInitialized = false;
+    private bool isLeaving;
+    private bool isConnecting;
+
+    private void Start()
+    {
+        if (leaveButton != null)
+            leaveButton.SetActive(false);
+
+        if (NetworkManager.Singleton == null)
+            return;
+
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+    }
+
+    private void OnClientConnected(ulong clientId)
+    {
+        if (clientId != NetworkManager.Singleton.LocalClientId)
+            return;
+
+        isConnecting = false;
+
+        if (leaveButton != null)
+            leaveButton.SetActive(true);
+
+        if (statusText != null)
+            statusText.text = NetworkManager.Singleton.IsHost
+                ? "Hosting game!"
+                : "Connected to host!";
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        // A remote player left. Do not disconnect the host.
+        if (clientId != NetworkManager.Singleton.LocalClientId)
+        {
+            if (NetworkManager.Singleton.IsServer && statusText != null)
+                statusText.text = $"Player {clientId} disconnected.";
+
+            return;
+        }
+
+        // Ignore callbacks caused by our own Leave Game button.
+        if (isLeaving)
+            return;
+
+        isConnecting = false;
+        isLeaving = true;
+
+        if (leaveButton != null)
+            leaveButton.SetActive(false);
+
+        if (joinCodeTextField != null)
+            joinCodeTextField.gameObject.SetActive(false);
+
+        if (statusText != null)
+            statusText.text = "Disconnected from host. You can join another game.";
+
+        Debug.Log("Local client disconnected from the session.");
+    }
+
+    public void LeaveGame()
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+
+        if (networkManager == null || !networkManager.IsListening)
+        {
+            ResetConnectionUI("You are not connected to a game.");
+            return;
+        }
+
+        // Set this before shutting down to suppress our own disconnect alert.
+        isLeaving = true;
+        isConnecting = false;
+
+        bool wasHost = networkManager.IsHost;
+
+        if (wasHost)
+            networkManager.Shutdown(); // Ends the host session for everyone.
+        else
+            networkManager.Shutdown(); // Leaves the client session.
+
+        ResetConnectionUI(wasHost
+            ? "You stopped hosting."
+            : "You left the game.");
+    }
+
+    private void ResetConnectionUI(string message)
+{
+    if (leaveButton != null)
+        leaveButton.SetActive(false);
+
+    if (joinCodeTextField != null)
+    {
+        joinCodeTextField.text = "";
+        joinCodeTextField.gameObject.SetActive(false);
+    }
+
+    if (joinCodeText != null)
+        joinCodeText.text = "";
+
+    if (statusText != null)
+        statusText.text = message;
+}
 
     private async Task InitializeServices()
     {
@@ -55,6 +169,8 @@ public class ConnectionManager : MonoBehaviour
 
     public async void HostGame()
     {
+        isLeaving = false;
+        isConnecting = true;
         PlayerSettings.PlayerName = GetPlayerName();
         await InitializeServices();
 
@@ -106,6 +222,8 @@ public class ConnectionManager : MonoBehaviour
 
     public async void JoinGame()
     {
+        isLeaving = false;
+        isConnecting = true;
         PlayerSettings.PlayerName = GetPlayerName();
         await InitializeServices();
 

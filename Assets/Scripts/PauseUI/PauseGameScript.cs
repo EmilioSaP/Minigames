@@ -8,16 +8,24 @@ public class PauseGameScript : MonoBehaviour
     [SerializeField] private UnityEvent onPause = new UnityEvent();
     [SerializeField] private UnityEvent onResume = new UnityEvent();
 
+    //[SerializeField] private UnityEvent onPlayerJoin = new UnityEvent();
+    //[SerializeField] private UnityEvent onPlayerLeave = new UnityEvent();
+
+    [SerializeField] private bool enablePause = true;
+
     private DisablePlayer disablePlayer;
+    
     private bool isPaused;
 
     private void OnEnable()
     {
         NetworkGameManager.LocalPlayerReady += OnLocalPlayerReady;
+        NetworkGameManager.LocalPlayerLeft += OnLocalPlayerLeft;
     }
     private void OnDisable()
     {
         NetworkGameManager.LocalPlayerReady -= OnLocalPlayerReady;
+        NetworkGameManager.LocalPlayerLeft -= OnLocalPlayerLeft;
     }
 
     private void Start()
@@ -34,12 +42,25 @@ public class PauseGameScript : MonoBehaviour
     private void OnLocalPlayerReady(DisablePlayer player)
     {
         disablePlayer = player;
-        disablePlayer.SetPlayerEnabled(!isPaused);
-        onResume.Invoke();
+        //onPlayerJoin.Invoke();
+        enablePause = true;
+        isPaused = false;
+    }
+
+    private void OnLocalPlayerLeft()
+    {
+        isPaused = true;
+        Cursor.lockState = CursorLockMode.None;
+        //onPlayerLeave.Invoke();
+        enablePause = false;
     }
 
     public void TogglePause()
     {
+        if (!enablePause)
+        {
+            return;
+        }
         isPaused = !isPaused;
 
         pauseUI.SetActive(isPaused);
