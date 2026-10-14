@@ -60,25 +60,33 @@ public class PauseGameScript : MonoBehaviour
 
     public void TogglePause()
     {
-        if (!enablePause)
-        {
-            return;
-        }
+        if (!enablePause){return;}
+
         isPaused = !isPaused;
 
-        pauseUI.SetActive(isPaused);
+        PauseActions(isPaused);
+    }
 
-        if (isPaused)
-        {
-            //onPause.Invoke();
-        }
-        else
-        {
-            //onResume.Invoke();
-        }
+    public void UnPause()
+    {
+        if (!enablePause){return;}
+        isPaused = false;
+        PauseActions(isPaused);
+    }
+
+    public void Pause()
+    {
+        if (!enablePause){return;}
+        isPaused = false;
+        PauseActions(isPaused);
+    }
+
+    public void PauseActions(bool paused)
+    {
+        pauseUI.SetActive(paused);
 
         if (disablePlayer != null)
-            disablePlayer.SetPlayerEnabled(!isPaused);
+            disablePlayer.SetPlayerEnabled(!paused);
         // For the case the player was destroyed and disablePlayer is no longer available and mouse remained locked.
         else
         {

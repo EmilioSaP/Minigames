@@ -19,7 +19,7 @@ public class ConnectionManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI joinCodeText;
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private TMP_InputField usernameInput;
-    [SerializeField] private GameObject leaveButton;
+    [SerializeField] private GameObject StartGameButton;
 
     [Header("Relay")]
     [SerializeField] private int maxConnections = 4;
@@ -30,8 +30,6 @@ public class ConnectionManager : MonoBehaviour
 
     private void Start()
     {
-        if (leaveButton != null)
-            leaveButton.SetActive(false);
 
         if (NetworkManager.Singleton == null)
             return;
@@ -56,8 +54,6 @@ public class ConnectionManager : MonoBehaviour
 
         isConnecting = false;
 
-        if (leaveButton != null)
-            leaveButton.SetActive(true);
 
         if (statusText != null)
             statusText.text = NetworkManager.Singleton.IsHost
@@ -82,9 +78,6 @@ public class ConnectionManager : MonoBehaviour
 
         isConnecting = false;
         isLeaving = true;
-
-        if (leaveButton != null)
-            leaveButton.SetActive(false);
 
         if (statusText != null)
             statusText.text = "Disconnected from host. You can join another game.";
@@ -120,9 +113,6 @@ public class ConnectionManager : MonoBehaviour
 
     private void ResetConnectionUI(string message)
     {
-        if (leaveButton != null)
-            leaveButton.SetActive(false);
-
         if (joinCodeTextField != null)
         {
             joinCodeTextField.text = "";
@@ -197,6 +187,7 @@ public class ConnectionManager : MonoBehaviour
                 statusText.text = "Hosting game!";
                 //enable the gamobject containing the joinCodeTextField so that the player can copy the join code
                 joinCodeTextField.text = joinCode; // Set the input field to the join code for easy copying
+                StartGameButton.SetActive(true);
 
                 Debug.Log($"HOST STARTED");
                 Debug.Log($"Join Code: {joinCode}");
@@ -253,6 +244,7 @@ public class ConnectionManager : MonoBehaviour
                 statusText.text = "Joining game...";
                 Debug.Log($"CLIENT STARTED");
                 Debug.Log($"Join Code: {joinCode}");
+                joinCodeTextField.text = joinCode;
             }
             else
             {
