@@ -57,7 +57,20 @@ public class NetworkGameManager : MonoBehaviour
         if (player == null)
             return;
 
-        player.transform.position = playerSpawn.PlayerSpawnPoint();
+        NetworkPlayerSpawnHandler spawnHandler =
+            player.GetComponent<NetworkPlayerSpawnHandler>();
+
+        if (spawnHandler == null)
+        {
+            Debug.LogError(
+                $"Player prefab is missing NetworkPlayerSpawnHandler. " +
+                $"Client ID: {clientId}");
+            return;
+        }
+
+        spawnHandler.ApplySpawnFromServer(
+            playerSpawn.PlayerSpawnPoint(),
+            player.transform.rotation);
     }
 
     private void OnClientDisconnected(ulong clientId)

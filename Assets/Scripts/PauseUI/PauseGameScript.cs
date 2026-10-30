@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -31,6 +32,28 @@ public class PauseGameScript : MonoBehaviour
     private void Start()
     {
         pauseUI.SetActive(false);
+
+        NetworkManager networkManager = NetworkManager.Singleton;
+        if (networkManager == null || !networkManager.IsClient)
+            return;
+
+        NetworkObject localPlayerObject =
+            networkManager.LocalClient.PlayerObject;
+
+        if (localPlayerObject == null)
+            return;
+
+        DisablePlayer localPlayer =
+            localPlayerObject.GetComponent<DisablePlayer>();
+
+        if (localPlayer == null)
+        {
+            Debug.LogWarning(
+                "Local player is missing the DisablePlayer component.");
+            return;
+        }
+
+        OnLocalPlayerReady(localPlayer);
     }
 
     private void Update()

@@ -8285,7 +8285,7 @@ GameObject:
   - component: {fileID: 1587779870}
   - component: {fileID: 1587779869}
   m_Layer: 5
-  m_Name: STATUSUI
+  m_Name: STATUSUI (Debug)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

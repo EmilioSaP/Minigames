@@ -5648,6 +5648,7 @@ GameObject:
   - component: {fileID: 6376116057119416850}
   - component: {fileID: 4753415245385795371}
   - component: {fileID: 8652397245420117743}
+  - component: {fileID: 3343336024858183316}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -6020,6 +6021,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkPickupInputGate
   ShowTopMostFoldoutHeaderGroup: 1
   pickupController: {fileID: 4753415245385795371}
+--- !u!114 &3343336024858183316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3090838943776890950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65c59feff1f750e498fb6067e1d94aee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkPlayerSpawnHandler
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &3648695234511257301
 GameObject:
   m_ObjectHideFlags: 0
