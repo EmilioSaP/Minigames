@@ -21,6 +21,7 @@ public class GameSpawnManager : MonoBehaviour
         SpawnSelectionMode.Sequential;
 
     private NetworkManager networkManager;
+    private NetworkSceneManager networkSceneManager;
     private bool isSubscribed;
 
     private int nextSpawnIndex;
@@ -60,8 +61,13 @@ public class GameSpawnManager : MonoBehaviour
 
         if (networkManager.NetworkConfig.EnableSceneManagement)
         {
-            networkManager.SceneManager.OnLoadEventCompleted
-                += OnLoadEventCompleted;
+            networkSceneManager = networkManager.SceneManager;
+
+            if (networkSceneManager != null)
+            {
+                networkSceneManager.OnLoadEventCompleted
+                    += OnLoadEventCompleted;
+            }
         }
 
         isSubscribed = true;
@@ -75,10 +81,11 @@ public class GameSpawnManager : MonoBehaviour
         networkManager.OnClientConnectedCallback -= OnClientConnected;
         networkManager.OnClientDisconnectCallback -= OnClientDisconnected;
 
-        if (networkManager.NetworkConfig.EnableSceneManagement)
+        if (networkSceneManager != null)
         {
-            networkManager.SceneManager.OnLoadEventCompleted
+            networkSceneManager.OnLoadEventCompleted
                 -= OnLoadEventCompleted;
+            networkSceneManager = null;
         }
 
         isSubscribed = false;
