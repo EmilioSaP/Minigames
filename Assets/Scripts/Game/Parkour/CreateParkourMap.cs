@@ -42,8 +42,10 @@ public class CreateParkourMap : MonoBehaviour
         Quaternion rot = exit.rotation * Quaternion.Euler(0f, Random.Range(-maxTurn, maxTurn), 0f);
         Vector3 offset = new Vector3(0f, Random.Range(upRange.x, upRange.y),
                                      Random.Range(forwardRange.x, forwardRange.y));
-        Vector3 pos = exit.position + exit.rotation * offset;
+        Vector3 startPosition = exit.position + exit.rotation * offset;
 
-        return Instantiate(prefab, pos, rot);
+        PlatformPiece next = Instantiate(prefab, startPosition, rot);
+        next.transform.position += startPosition - next.startPoint.position;
+        return next;
     }
 }
