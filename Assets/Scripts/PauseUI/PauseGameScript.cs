@@ -40,7 +40,7 @@ public class PauseGameScript : MonoBehaviour
             !string.IsNullOrEmpty(ConnectionManager.CurrentJoinCode))
         {
             joinCodeTextField.text =
-                $"Join Code: {ConnectionManager.CurrentJoinCode}";
+                $"{ConnectionManager.CurrentJoinCode}";
         }
 
         NetworkManager networkManager = NetworkManager.Singleton;
@@ -115,7 +115,7 @@ public class PauseGameScript : MonoBehaviour
     public void Pause()
     {
         if (!enablePause){return;}
-        isPaused = false;
+        isPaused = true;
         PauseActions(isPaused);
     }
 

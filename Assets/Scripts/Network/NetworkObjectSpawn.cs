@@ -79,7 +79,7 @@ public class NetworkObjectSpawn : MonoBehaviour
             return;
 
         NetworkObject spawnedObject = Instantiate(prefab);
-        spawnedObject.Spawn();
+        spawnedObject.Spawn(destroyWithScene: true);
     }
 
     private static bool IsHost()
