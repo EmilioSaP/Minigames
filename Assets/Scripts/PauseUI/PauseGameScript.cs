@@ -2,10 +2,12 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class PauseGameScript : MonoBehaviour
 {
     [SerializeField] private GameObject pauseUI;
+    [SerializeField] private TMP_InputField joinCodeTextField;  // Makes it easier to copy the join code
     //[SerializeField] private UnityEvent onPause = new UnityEvent();
     //[SerializeField] private UnityEvent onResume = new UnityEvent();
 
@@ -17,6 +19,7 @@ public class PauseGameScript : MonoBehaviour
     private DisablePlayer disablePlayer;
     
     private bool isPaused;
+    public bool HasLocalPlayer => disablePlayer != null;
 
     private void OnEnable()
     {
@@ -32,6 +35,13 @@ public class PauseGameScript : MonoBehaviour
     private void Start()
     {
         pauseUI.SetActive(false);
+
+        if (joinCodeTextField != null &&
+            !string.IsNullOrEmpty(ConnectionManager.CurrentJoinCode))
+        {
+            joinCodeTextField.text =
+                $"Join Code: {ConnectionManager.CurrentJoinCode}";
+        }
 
         NetworkManager networkManager = NetworkManager.Singleton;
         if (networkManager == null || !networkManager.IsClient)
@@ -58,6 +68,11 @@ public class PauseGameScript : MonoBehaviour
 
     private void Update()
     {
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            Pause();
+            return;
+        }
         if (Keyboard.current != null && Keyboard.current.pKey.wasPressedThisFrame || Mouse.current.rightButton.wasPressedThisFrame)
             TogglePause();
     }

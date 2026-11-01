@@ -480,7 +480,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1110572182}
         m_TargetAssemblyTypeName: MatchExitController, Assembly-CSharp
-        m_MethodName: LeaveMatch
+        m_MethodName: LeaveParty
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3002,6 +3002,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1110572183}
   - component: {fileID: 1110572182}
+  - component: {fileID: 1983114567}
   m_Layer: 0
   m_Name: MatchExitController
   m_TagString: Untagged
@@ -3022,6 +3023,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MatchExitController
   lobbySceneName: LobbyScene
+  networkSceneController: {fileID: 1983114567}
 --- !u!4 &1110572183
 Transform:
   m_ObjectHideFlags: 0
@@ -4748,6 +4750,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PauseGameScript
   pauseUI: {fileID: 527406119}
+  joinCodeTextField: {fileID: 646768163}
   enablePause: 1
 --- !u!4 &1764040711
 Transform:
@@ -5062,6 +5065,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1983114567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1110572181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f68db55dd57ba640b522928f7c0d9e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkSceneController
+  gameplaySceneName: GameScene
+  lobbySceneName: LobbyScene
 --- !u!1 &2007432564
 GameObject:
   m_ObjectHideFlags: 0

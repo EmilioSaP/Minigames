@@ -7,6 +7,7 @@ public class MatchExitController : MonoBehaviour
 {
     [Header("Scene Settings")]
     [SerializeField] private string lobbySceneName = "LobbyScene";
+    [SerializeField] private NetworkSceneController networkSceneController;
 
     private NetworkManager networkManager;
     private bool isReturningToLobby;
@@ -47,19 +48,34 @@ public class MatchExitController : MonoBehaviour
         isSubscribed = true;
     }
 
-    public void LeaveMatch()
+    public void LeaveParty()
     {
         if (isReturningToLobby)
             return;
+
+        NetworkManager manager = NetworkManager.Singleton;
+
+        if (manager != null && manager.IsListening && manager.IsHost)
+        {
+            if (networkSceneController == null)
+            {
+                Debug.LogError(
+                    "Cannot return the party: NetworkSceneController is not assigned."
+                );
+                return;
+            }
+
+            networkSceneController.ReturnPartyToLobby();
+            return;
+        }
 
         isReturningToLobby = true;
 
         Debug.Log("Leaving match...");
 
-        if (NetworkManager.Singleton != null &&
-            NetworkManager.Singleton.IsListening)
+        if (manager != null && manager.IsListening)
         {
-            NetworkManager.Singleton.Shutdown();
+            manager.Shutdown();
         }
 
         LoadLobbyLocally();

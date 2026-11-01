@@ -6725,6 +6725,7 @@ GameObject:
   - component: {fileID: 1241972787}
   - component: {fileID: 1241972786}
   - component: {fileID: 1241972788}
+  - component: {fileID: 1241972789}
   m_Layer: 0
   m_Name: NetworkGameManager
   m_TagString: Untagged
@@ -6774,6 +6775,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkPlayerSpawn
   spawnPoint: {fileID: 621303535}
   spawnRadius: 10
+--- !u!114 &1241972789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1241972785}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aeca70a630d74054ab5104de66ad2d4, type: 3}
+  m_Name: ""
+  m_EditorClassIdentifier: Assembly-CSharp::LobbySpawnManager
+  playerSpawn: {fileID: 1241972788}
+  pauseGameScript: {fileID: 1433894083}
 --- !u!1 &1259502383
 GameObject:
   m_ObjectHideFlags: 0
@@ -10025,6 +10040,7 @@ MonoBehaviour:
   statusText: {fileID: 1434379077}
   usernameInput: {fileID: 397331327}
   StartGameButton: {fileID: 1087072008}
+  offlineMenuRoot: {fileID: 1995043622}
   maxConnections: 6
 --- !u!1 &1921199303
 GameObject:

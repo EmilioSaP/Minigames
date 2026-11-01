@@ -7,8 +7,9 @@ public class NetworkSceneController : MonoBehaviour
 {
     [Header("Scene Settings")]
     [SerializeField] private string gameplaySceneName = "GameScene";
+    [SerializeField] private string lobbySceneName = "LobbyScene";
 
-    private bool isLoadingGame;
+    private bool isLoadingScene;
 
     public void StartGame()
     {
@@ -28,37 +29,60 @@ public class NetworkSceneController : MonoBehaviour
             return;
         }
 
-        // Prevent repeated clicks from requesting multiple scene loads.
-        if (isLoadingGame)
+        LoadPartyScene(networkManager, gameplaySceneName);
+    }
+
+    public void ReturnPartyToLobby()
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+
+        if (networkManager == null || !networkManager.IsListening)
+        {
+            Debug.LogWarning("Cannot return the party: no active network session.");
+            return;
+        }
+
+        if (!networkManager.IsHost)
+        {
+            Debug.LogWarning("Only the host can return the party to the lobby.");
+            return;
+        }
+
+        LoadPartyScene(networkManager, lobbySceneName);
+    }
+
+    private void LoadPartyScene(
+        NetworkManager networkManager,
+        string sceneName)
+    {
+        if (isLoadingScene)
             return;
 
         if (!networkManager.NetworkConfig.EnableSceneManagement)
         {
             Debug.LogError(
-                "Cannot start the game: NGO scene management is disabled."
+                $"Cannot load {sceneName}: NGO scene management is disabled."
             );
             return;
         }
 
-        isLoadingGame = true;
+        isLoadingScene = true;
 
-        // The host requests the scene transition for the entire session.
         SceneEventProgressStatus status =
             networkManager.SceneManager.LoadScene(
-                gameplaySceneName,
+                sceneName,
                 LoadSceneMode.Single
             );
 
         if (status != SceneEventProgressStatus.Started)
         {
-            isLoadingGame = false;
-
+            isLoadingScene = false;
             Debug.LogError(
-                $"Failed to start scene transition. Status: {status}"
+                $"Failed to load scene {sceneName}. Status: {status}"
             );
             return;
         }
 
-        Debug.Log($"Loading gameplay scene: {gameplaySceneName}");
+        Debug.Log($"Loading scene for party: {sceneName}");
     }
 }

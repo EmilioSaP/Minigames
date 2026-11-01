@@ -20,9 +20,14 @@ public class ConnectionManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private TMP_InputField usernameInput;
     [SerializeField] private GameObject StartGameButton;
+    [SerializeField] private GameObject offlineMenuRoot;
 
     [Header("Relay")]
     [SerializeField] private int maxConnections = 4;
+
+    private static string currentJoinCode = string.Empty;
+
+    public static string CurrentJoinCode => currentJoinCode;
 
     private bool servicesInitialized = false;
     private bool isLeaving;
@@ -30,12 +35,22 @@ public class ConnectionManager : MonoBehaviour
 
     private void Start()
     {
+        ApplyLobbyPresentation();
 
-        if (NetworkManager.Singleton == null)
+        NetworkManager networkManager = NetworkManager.Singleton;
+
+        if (networkManager == null)
             return;
 
-        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        networkManager.OnClientConnectedCallback += OnClientConnected;
+        networkManager.OnClientDisconnectCallback += OnClientDisconnected;
+
+        if (IsConnectedParty(networkManager) && statusText != null)
+        {
+            statusText.text = networkManager.IsHost
+                ? "Hosting game!"
+                : "Connected to host!";
+        }
     }
 
     private void OnDestroy()
@@ -54,11 +69,12 @@ public class ConnectionManager : MonoBehaviour
 
         isConnecting = false;
 
-
         if (statusText != null)
             statusText.text = NetworkManager.Singleton.IsHost
                 ? "Hosting game!"
                 : "Connected to host!";
+
+        ApplyLobbyPresentation();
     }
 
     private void OnClientDisconnected(ulong clientId)
@@ -78,10 +94,12 @@ public class ConnectionManager : MonoBehaviour
 
         isConnecting = false;
         isLeaving = true;
+        currentJoinCode = string.Empty;
 
         if (statusText != null)
             statusText.text = "Disconnected from host. You can join another game.";
 
+        ApplyLobbyPresentation();
         Debug.Log("Local client disconnected from the session.");
     }
 
@@ -92,23 +110,23 @@ public class ConnectionManager : MonoBehaviour
         if (networkManager == null || !networkManager.IsListening)
         {
             ResetConnectionUI("You are not connected to a game.");
+            ApplyLobbyPresentation();
             return;
         }
 
         // Set this before shutting down to suppress our own disconnect alert.
         isLeaving = true;
         isConnecting = false;
+        currentJoinCode = string.Empty;
 
         bool wasHost = networkManager.IsHost;
 
-        if (wasHost)
-            networkManager.Shutdown(); // Ends the host session for everyone.
-        else
-            networkManager.Shutdown(); // Leaves the client session.
+        networkManager.Shutdown();
 
         ResetConnectionUI(wasHost
             ? "You stopped hosting."
             : "You left the game.");
+        ApplyLobbyPresentation();
     }
 
     private void ResetConnectionUI(string message)
@@ -183,11 +201,12 @@ public class ConnectionManager : MonoBehaviour
 
             if (started)
             {
+                currentJoinCode = joinCode;
                 joinCodeText.text = $"Join Code: {joinCode}";
                 statusText.text = "Hosting game!";
                 //enable the gamobject containing the joinCodeTextField so that the player can copy the join code
                 joinCodeTextField.text = joinCode; // Set the input field to the join code for easy copying
-                StartGameButton.SetActive(true);
+                ApplyLobbyPresentation();
 
                 Debug.Log($"HOST STARTED");
                 Debug.Log($"Join Code: {joinCode}");
@@ -244,7 +263,9 @@ public class ConnectionManager : MonoBehaviour
                 statusText.text = "Joining game...";
                 Debug.Log($"CLIENT STARTED");
                 Debug.Log($"Join Code: {joinCode}");
+                currentJoinCode = joinCode;
                 joinCodeTextField.text = joinCode;
+                ApplyLobbyPresentation();
             }
             else
             {
@@ -268,5 +289,46 @@ public class ConnectionManager : MonoBehaviour
             return $"Player {UnityEngine.Random.Range(1000, 9999)}";
 
         return playerName;
+    }
+
+    private void ApplyLobbyPresentation()
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+        bool isConnectedParty = IsConnectedParty(networkManager);
+
+        if (offlineMenuRoot != null)
+            offlineMenuRoot.SetActive(!isConnectedParty);
+
+        if (StartGameButton != null)
+            StartGameButton.SetActive(
+                isConnectedParty && networkManager.IsHost
+            );
+
+        if (!isConnectedParty)
+        {
+            if (joinCodeTextField != null)
+                joinCodeTextField.text = string.Empty;
+
+            if (joinCodeText != null)
+                joinCodeText.text = string.Empty;
+
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(currentJoinCode))
+        {
+            if (joinCodeTextField != null)
+                joinCodeTextField.text = currentJoinCode;
+
+            if (joinCodeText != null)
+                joinCodeText.text = $"Join Code: {currentJoinCode}";
+        }
+    }
+
+    private static bool IsConnectedParty(NetworkManager networkManager)
+    {
+        return networkManager != null &&
+            networkManager.IsListening &&
+            (networkManager.IsHost || networkManager.IsConnectedClient);
     }
 }
