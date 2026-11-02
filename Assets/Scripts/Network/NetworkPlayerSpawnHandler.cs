@@ -5,11 +5,21 @@ using UnityEngine;
 [RequireComponent(typeof(NetworkObject))]
 public class NetworkPlayerSpawnHandler : NetworkBehaviour
 {
-    // Called by the server's GameSpawnManager.
+    public bool HasAppliedSpawn { get; private set; }
+
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+        HasAppliedSpawn = false;
+    }
+
+    // Applies a spawn selected by a server-side scene manager.
     public void ApplySpawnFromServer(Vector3 position, Quaternion rotation)
     {
         if (!IsServer)
             return;
+
+        HasAppliedSpawn = false;
 
         // The host owns its local player, so it can move it directly.
         if (IsOwner)
@@ -22,6 +32,14 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
             // the spawn position using owner-authoritative movement.
             ApplySpawnPositionRpc(position, rotation);
         }
+    }
+
+    public void ResetSpawnStatus()
+    {
+        if (!IsOwner)
+            return;
+
+        HasAppliedSpawn = false;
     }
 
     [Rpc(SendTo.Owner)]
@@ -50,5 +68,7 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
 
         if (wasEnabled)
             controller.enabled = true;
+
+        HasAppliedSpawn = true;
     }
 }

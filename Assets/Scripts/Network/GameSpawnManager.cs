@@ -5,7 +5,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class GameSpawnManager : MonoBehaviour
+public class GameSpawnManager : MonoBehaviour, IMatchSpawnReadiness
 {
     public enum SpawnSelectionMode
     {
@@ -29,6 +29,20 @@ public class GameSpawnManager : MonoBehaviour
     // Prevents one player from being assigned several spawn points
     // because multiple network callbacks occur close together.
     private readonly HashSet<ulong> placedClientIds = new();
+
+    public bool IsLocalPlayerSpawned
+    {
+        get
+        {
+            NetworkObject localPlayer = networkManager?.LocalClient?.PlayerObject;
+
+            return localPlayer != null &&
+                   localPlayer.TryGetComponent(
+                       out NetworkPlayerSpawnHandler spawnHandler
+                   ) &&
+                   spawnHandler.HasAppliedSpawn;
+        }
+    }
 
     private void OnEnable()
     {
@@ -97,11 +111,25 @@ public class GameSpawnManager : MonoBehaviour
         List<ulong> clientsCompleted,
         List<ulong> clientsTimedOut)
     {
-        if (!networkManager.IsServer)
-            return;
-
         // Only react to loading the scene containing this manager.
         if (sceneName != gameObject.scene.name)
+            return;
+
+        if (networkManager.IsClient)
+        {
+            NetworkObject localPlayer =
+                networkManager.LocalClient?.PlayerObject;
+
+            if (localPlayer != null &&
+                localPlayer.TryGetComponent(
+                    out NetworkPlayerSpawnHandler spawnHandler
+                ))
+            {
+                spawnHandler.ResetSpawnStatus();
+            }
+        }
+
+        if (!networkManager.IsServer)
             return;
 
         Debug.Log($"SpawnManager ready in scene: {sceneName}");

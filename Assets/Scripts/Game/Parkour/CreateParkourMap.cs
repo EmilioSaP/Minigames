@@ -1,6 +1,8 @@
+
+using System;
 using UnityEngine;
 
-public class CreateParkourMap : MonoBehaviour
+public class CreateParkourMap : MatchPreparationTask
 {
     public PlatformPiece startPrefab;
     public PlatformPiece[] platformPrefabs;
@@ -9,43 +11,125 @@ public class CreateParkourMap : MonoBehaviour
     public Vector2 forwardRange = new Vector2(0f, 2f);
     public Vector2 upRange = new Vector2(0f, 2f);
     public float maxTurn = 30f;
-    public Vector2Int countRange = new Vector2Int(9, 13); // inclusive
 
-    void Start()
+    public Vector2Int countRange = new Vector2Int(9, 13);
+
+    private bool hasGenerated;
+
+    public override void BeginPreparation(int seed)
     {
-        CreateMap();
+        ResetPreparationState();
+
+        if (hasGenerated)
+        {
+            MarkReady();
+            return;
+        }
+
+        try
+        {
+            System.Random random = new System.Random(seed);
+
+            CreateMap(random);
+
+            hasGenerated = true;
+
+            MarkReady();
+
+            Debug.Log($"Parkour map generated with seed: {seed}");
+        }
+        catch (Exception e)
+        {
+            MarkFailed(e.Message);
+        }
     }
-    public void CreateMap()
+
+    private void CreateMap(System.Random random)
     {
-        var current = Instantiate(startPrefab, transform.position, transform.rotation);
-        int count = Random.Range(countRange.x, countRange.y + 1);
+        if (startPrefab == null || goalPrefab == null)
+            throw new Exception("Start or goal prefab is missing.");
+
+        if (platformPrefabs == null || platformPrefabs.Length == 0)
+            throw new Exception("No platform prefabs assigned.");
+
+        PlatformPiece current =
+            Instantiate(startPrefab, transform.position, transform.rotation);
+
+        int minCount = Mathf.Min(countRange.x, countRange.y);
+        int maxCount = Mathf.Max(countRange.x, countRange.y);
+
+        int count = random.Next(minCount, maxCount + 1);
+
         int last = -1;
 
         for (int i = 0; i < count; i++)
         {
-            // Pick a different prefab than last time
-            int idx;
-            do { idx = Random.Range(0, platformPrefabs.Length); }
-            while (idx == last && platformPrefabs.Length > 1);
-            last = idx;
+            int index;
 
-            current = SpawnNext(current, platformPrefabs[idx]);
+            do
+            {
+                index = random.Next(0, platformPrefabs.Length);
+            }
+            while (index == last && platformPrefabs.Length > 1);
+
+            last = index;
+
+            if (platformPrefabs[index] == null)
+                throw new Exception($"Platform prefab at index {index} is missing.");
+
+            current = SpawnNext(current, platformPrefabs[index], random);
         }
 
-        SpawnNext(current, goalPrefab);
+        SpawnNext(current, goalPrefab, random);
     }
 
-    PlatformPiece SpawnNext(PlatformPiece from, PlatformPiece prefab)
+    private PlatformPiece SpawnNext(
+        PlatformPiece from,
+        PlatformPiece prefab,
+        System.Random random)
     {
-        Transform exit = from.exitPoints[Random.Range(0, from.exitPoints.Length)];
+        if (from.exitPoints == null || from.exitPoints.Length == 0)
+            throw new Exception("A platform has no exit points.");
 
-        Quaternion rot = exit.rotation * Quaternion.Euler(0f, Random.Range(-maxTurn, maxTurn), 0f);
-        Vector3 offset = new Vector3(0f, Random.Range(upRange.x, upRange.y),
-                                     Random.Range(forwardRange.x, forwardRange.y));
-        Vector3 startPosition = exit.position + exit.rotation * offset;
+        Transform exit =
+            from.exitPoints[random.Next(0, from.exitPoints.Length)];
 
-        PlatformPiece next = Instantiate(prefab, startPosition, rot);
-        next.transform.position += startPosition - next.startPoint.position;
+        float turn = Range(random, -maxTurn, maxTurn);
+
+        Quaternion rotation =
+            exit.rotation * Quaternion.Euler(0f, turn, 0f);
+
+        Vector3 offset = new Vector3(
+            0f,
+            Range(random, upRange.x, upRange.y),
+            Range(random, forwardRange.x, forwardRange.y)
+        );
+
+        Vector3 startPosition =
+            exit.position + exit.rotation * offset;
+
+        PlatformPiece next =
+            Instantiate(prefab, startPosition, rotation);
+
+        if (next.startPoint == null)
+        {
+            Destroy(next.gameObject);
+            throw new Exception(
+                $"Platform prefab {prefab.name} has no startPoint assigned."
+            );
+        }
+
+        next.transform.position +=
+            startPosition - next.startPoint.position;
+
         return next;
+    }
+
+    private static float Range(
+        System.Random random,
+        float min,
+        float max)
+    {
+        return min + (float)random.NextDouble() * (max - min);
     }
 }
