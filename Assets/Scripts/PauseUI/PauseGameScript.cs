@@ -8,8 +8,8 @@ public class PauseGameScript : MonoBehaviour
 {
     [SerializeField] private GameObject pauseUI;
     [SerializeField] private TMP_InputField joinCodeTextField;  // Makes it easier to copy the join code
-    //[SerializeField] private UnityEvent onPause = new UnityEvent();
-    //[SerializeField] private UnityEvent onResume = new UnityEvent();
+    [SerializeField] private UnityEvent onPause = new UnityEvent();
+    [SerializeField] private UnityEvent onResume = new UnityEvent();
 
     //[SerializeField] private UnityEvent onPlayerJoin = new UnityEvent();
     //[SerializeField] private UnityEvent onPlayerLeave = new UnityEvent();
@@ -122,6 +122,14 @@ public class PauseGameScript : MonoBehaviour
     public void PauseActions(bool paused)
     {
         pauseUI.SetActive(paused);
+        if (paused)
+        {
+            onPause.Invoke();
+        }
+        else
+        {
+            onResume.Invoke();
+        }
 
         if (disablePlayer != null)
             disablePlayer.SetPlayerEnabled(!paused);
