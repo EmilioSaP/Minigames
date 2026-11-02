@@ -11,6 +11,11 @@ public class NetworkSceneController : MonoBehaviour
 
     private bool isLoadingScene;
 
+    private void Awake()
+    {
+        RemoveDuplicateNetworkManagers();
+    }
+
     public void StartGame()
     {
         NetworkManager networkManager = NetworkManager.Singleton;
@@ -84,5 +89,24 @@ public class NetworkSceneController : MonoBehaviour
         }
 
         Debug.Log($"Loading scene for party: {sceneName}");
+    }
+
+    private static void RemoveDuplicateNetworkManagers()
+    {
+        NetworkManager singleton = NetworkManager.Singleton;
+        if (singleton == null)
+            return;
+
+        foreach (NetworkManager manager in
+                 FindObjectsByType<NetworkManager>(FindObjectsSortMode.None))
+        {
+            if (manager == singleton)
+                continue;
+
+            manager.gameObject.SetActive(false);
+            Destroy(manager.gameObject);
+            Debug.LogWarning(
+                "Removed a duplicate NetworkManager loaded with the scene.");
+        }
     }
 }
