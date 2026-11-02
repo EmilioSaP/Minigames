@@ -7,6 +7,7 @@ using TMPro;
 public class PauseGameScript : MonoBehaviour
 {
     [SerializeField] private GameObject pauseUI;
+    [SerializeField] private GameObject SettingsUI;
     [SerializeField] private TMP_InputField joinCodeTextField;  // Makes it easier to copy the join code
 
     //[SerializeField] private UnityEvent onPause = new UnityEvent();
@@ -41,6 +42,7 @@ public class PauseGameScript : MonoBehaviour
     private void Start()
     {
         pauseUI.SetActive(false);
+        SettingsUI.SetActive(false);
 
         if (joinCodeTextField != null &&
             !string.IsNullOrEmpty(ConnectionManager.CurrentJoinCode))
@@ -147,5 +149,6 @@ public class PauseGameScript : MonoBehaviour
             Cursor.lockState = CursorLockMode.None;
         }
         pauseUI.SetActive(paused);
+        SettingsUI.SetActive(false);
     }
 }
