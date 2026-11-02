@@ -8,6 +8,7 @@ public class LobbySpawnManager : MonoBehaviour
 {
     [SerializeField] private NetworkPlayerSpawn playerSpawn;
     [SerializeField] private PauseGameScript pauseGameScript;
+    [SerializeField] private AudioClip lobbyClip;
 
     private NetworkManager networkManager;
     private NetworkSceneManager networkSceneManager;
@@ -106,6 +107,8 @@ public class LobbySpawnManager : MonoBehaviour
 
         if (networkManager.IsClient)
             StartCoroutine(EnableLocalPlayerAfterTransition());
+
+        AudioManager.Instance.PlayMusic(lobbyClip, true, false);
     }
 
     private IEnumerator EnableLocalPlayerAfterTransition()

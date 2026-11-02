@@ -294,7 +294,7 @@ public class ConnectionManager : MonoBehaviour
     private void ApplyLobbyPresentation()
     {
         NetworkManager networkManager = NetworkManager.Singleton;
-        bool isConnectedParty = IsConnectedParty(networkManager);
+        bool isConnectedParty = !isLeaving && IsConnectedParty(networkManager);
 
         if (offlineMenuRoot != null)
             offlineMenuRoot.SetActive(!isConnectedParty);

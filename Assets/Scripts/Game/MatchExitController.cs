@@ -8,6 +8,7 @@ public class MatchExitController : MonoBehaviour
     [Header("Scene Settings")]
     [SerializeField] private string lobbySceneName = "LobbyScene";
     [SerializeField] private NetworkSceneController networkSceneController;
+    [SerializeField] private AudioClip lobbyClip;
 
     private NetworkManager networkManager;
     private bool isReturningToLobby;
@@ -106,6 +107,7 @@ public class MatchExitController : MonoBehaviour
 
     private void LoadLobbyLocally()
     {
+        AudioManager.Instance.PlayMusic(lobbyClip, true, false);
         if (SceneManager.GetActiveScene().name == lobbySceneName)
             return;
 
