@@ -55,7 +55,7 @@ public sealed class AudioManager : MonoBehaviour
     /// Starts/replaces the main music track. Starting new main music stops any temporary track.
     /// Main and temporary sources should both route to the Music AudioMixer group.
     /// </summary>
-    public void PlayMusic(AudioClip clip, bool loop = true, bool interruptTemporary = true)
+    public void PlayMusic(AudioClip clip, bool loop = true, bool interruptTemporary = false)
     {
         if (clip == null || musicSource == null)
             return;

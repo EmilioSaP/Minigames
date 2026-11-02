@@ -8,13 +8,19 @@ public class PauseGameScript : MonoBehaviour
 {
     [SerializeField] private GameObject pauseUI;
     [SerializeField] private TMP_InputField joinCodeTextField;  // Makes it easier to copy the join code
-    [SerializeField] private UnityEvent onPause = new UnityEvent();
-    [SerializeField] private UnityEvent onResume = new UnityEvent();
+
+    //[SerializeField] private UnityEvent onPause = new UnityEvent();
+    //[SerializeField] private UnityEvent onResume = new UnityEvent();
 
     //[SerializeField] private UnityEvent onPlayerJoin = new UnityEvent();
     //[SerializeField] private UnityEvent onPlayerLeave = new UnityEvent();
 
     [SerializeField] private bool enablePause = true;
+    [Header("Audio Clips for Pause/Unpause")]
+    [SerializeField] private AudioClip pauseAudioClip;
+    [SerializeField] private AudioClip unPauseAudioClip;
+    [Header("Audio Clips for PauseMusic")]
+    [SerializeField] private AudioClip[] pauseMusicClips;
 
     private DisablePlayer disablePlayer;
     
@@ -121,14 +127,16 @@ public class PauseGameScript : MonoBehaviour
 
     public void PauseActions(bool paused)
     {
-        pauseUI.SetActive(paused);
         if (paused)
         {
-            onPause.Invoke();
+            AudioManager.Instance.PlayLocalSFX(pauseAudioClip);
+            AudioClip pauseMusicClip = pauseMusicClips[Random.Range(0, pauseMusicClips.Length)];
+            AudioManager.Instance.PlayTemporaryMusic(pauseMusicClip);
         }
         else
         {
-            onResume.Invoke();
+            AudioManager.Instance.PlayLocalSFX(unPauseAudioClip);
+            AudioManager.Instance.StopTemporaryMusic();
         }
 
         if (disablePlayer != null)
@@ -138,5 +146,6 @@ public class PauseGameScript : MonoBehaviour
         {
             Cursor.lockState = CursorLockMode.None;
         }
+        pauseUI.SetActive(paused);
     }
 }

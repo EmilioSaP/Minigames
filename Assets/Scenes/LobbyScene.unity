@@ -8048,6 +8048,10 @@ MonoBehaviour:
   pauseUI: {fileID: 546526012}
   joinCodeTextField: {fileID: 0}
   enablePause: 0
+  pauseAudioClip: {fileID: 8300000, guid: 25d01dec42d7dba45879a3485bb3c672, type: 3}
+  unPauseAudioClip: {fileID: 8300000, guid: 25d01dec42d7dba45879a3485bb3c672, type: 3}
+  pauseMusicClips:
+  - {fileID: 8300000, guid: 28fb2ddddae98194d9200099b850bc03, type: 3}
 --- !u!114 &1433894084
 MonoBehaviour:
   m_ObjectHideFlags: 0
