@@ -4717,6 +4717,7 @@ MonoBehaviour:
   - {fileID: 89307409625703715, guid: 85cb488124443154ca2ac62aeda3c70e, type: 3}
   - {fileID: 3304924399730523572, guid: a5e73fc2eda52ad408e9973ae24aaeaa, type: 3}
   - {fileID: 6015242263691829998, guid: 9e8ddfeb94ee84c4fa6c1cdf2cea445f, type: 3}
+  - {fileID: 2758074029980666165, guid: f363f580c14bbb648b58887c9e469295, type: 3}
 --- !u!4 &695526235
 Transform:
   m_ObjectHideFlags: 0
@@ -8733,6 +8734,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobbySpawnManager
   playerSpawn: {fileID: 1241972788}
   pauseGameScript: {fileID: 1433894083}
+  lobbyClip: {fileID: 0}
 --- !u!1 &1259502383
 GameObject:
   m_ObjectHideFlags: 0
