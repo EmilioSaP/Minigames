@@ -70,7 +70,9 @@ public class NetworkGameManager : MonoBehaviour
 
         spawnHandler.ApplySpawnFromServer(
             playerSpawn.PlayerSpawnPoint(),
-            player.transform.rotation);
+            player.transform.rotation,
+            false
+            );
     }
 
     private void OnClientDisconnected(ulong clientId)
