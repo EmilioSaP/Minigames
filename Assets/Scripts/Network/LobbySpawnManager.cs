@@ -188,7 +188,7 @@ public class LobbySpawnManager : MonoBehaviour
         }
 
         Vector3 position = playerSpawn.PlayerSpawnPoint();
-        spawnHandler.ApplySpawnFromServer(position, playerObject.transform.rotation);
+        spawnHandler.ApplySpawnFromServer(position, playerObject.transform.rotation, false);
         placedClientIds.Add(clientId);
 
         Debug.Log($"Returned client {clientId} to the lobby at {position}");

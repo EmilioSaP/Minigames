@@ -15,6 +15,7 @@ public class GameSpawnManager : MonoBehaviour, IMatchSpawnReadiness
 
     [Header("Spawn Points")]
     [SerializeField] private Transform[] spawnPoints;
+    [SerializeField] private bool disableMovementOnSpawn = true;
 
     [SerializeField]
     private SpawnSelectionMode selectionMode =
@@ -221,8 +222,9 @@ public class GameSpawnManager : MonoBehaviour, IMatchSpawnReadiness
         Transform spawnPoint = GetNextSpawnPoint();
 
         spawnHandler.ApplySpawnFromServer(
-            spawnPoint.position,
-            spawnPoint.rotation
+        spawnPoint.position,
+        spawnPoint.rotation,
+        disableMovementOnSpawn
         );
 
         placedClientIds.Add(clientId);
