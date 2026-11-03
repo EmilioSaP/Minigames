@@ -16,6 +16,7 @@ public class PickupController : MonoBehaviour
     [SerializeField] private InteractionDetector interactionDetector;
     [SerializeField] private Transform grabPosition;
     [SerializeField] private GameObject playerView;
+    [SerializeField] private NetworkPlayerAudio networkPlayerAudio;
 
     [Header("Throw")]
     [SerializeField] private float minimumThrowCharge = 0.1f;
@@ -219,6 +220,8 @@ public class PickupController : MonoBehaviour
 
             throwChargeTimer = 0f;
             pickupState = PickupState.Held;
+
+            networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Pickup);
         }
         else
         {
@@ -291,9 +294,12 @@ public class PickupController : MonoBehaviour
         if (charge < minimumThrowCharge)
         {
             heldInteraction.RequestDrop(this, heldObject);
+            networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Drop);
         }
         else
         {
+            networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Throw);
+
             Vector3 direction = playerView != null
                 ? playerView.transform.forward.normalized
                 : transform.forward;

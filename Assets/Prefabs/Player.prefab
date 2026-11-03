@@ -272,7 +272,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7465099195773583740
 Transform:
   m_ObjectHideFlags: 0
@@ -5754,7 +5754,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2074510670
+  GlobalObjectIdHash: 442197133
   InScenePlacedSourceGlobalObjectIdHash: 3758220817
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -5832,6 +5832,7 @@ MonoBehaviour:
   sprintSpeed: 8
   jumpHeight: 1.2
   gravity: -9.81
+  networkPlayerAudio: {fileID: 7064147469925891015}
 --- !u!114 &5925359814520446568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6011,6 +6012,7 @@ MonoBehaviour:
   interactionDetector: {fileID: 8139366017273182291}
   grabPosition: {fileID: 7769707808994509726}
   playerView: {fileID: 8151291194530539455}
+  networkPlayerAudio: {fileID: 7064147469925891015}
   minimumThrowCharge: 0.1
 --- !u!114 &8652397245420117743
 MonoBehaviour:
@@ -6052,11 +6054,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAudio
   worldEmitter: {fileID: 5497058188952084400}
-  jumpClip: {fileID: 8300000, guid: 25d01dec42d7dba45879a3485bb3c672, type: 3}
-  throwClip: {fileID: 8300000, guid: 25d01dec42d7dba45879a3485bb3c672, type: 3}
+  jumpClip: {fileID: 8300000, guid: 8d48876ecb6f0d14a889f53916722045, type: 3}
+  throwClips:
+  - {fileID: 8300000, guid: ca7dda526ee784641880f3226320f9c1, type: 3}
+  - {fileID: 8300000, guid: d3b47380d2c96504aad2ec46c34f229c, type: 3}
+  - {fileID: 8300000, guid: 018675c4a7ef49b41906261bf7370182, type: 3}
+  - {fileID: 8300000, guid: 952c0268e6c8edb4396a1fe89fe4cee0, type: 3}
+  - {fileID: 8300000, guid: 3e1a992cb1dfcc1459d5f0a844f1bd0f, type: 3}
   landClip: {fileID: 8300000, guid: c085d41d3a54b144297bc307400b0d6e, type: 3}
   pickupClip: {fileID: 8300000, guid: ef9e45d8e3b1cfb4aa5810906d891551, type: 3}
   dropClip: {fileID: 8300000, guid: caeaa5737e53dec4eb251d590c556f67, type: 3}
+  hurtClips:
+  - {fileID: 8300000, guid: 74ef795127e46c3498d285895f65d5d7, type: 3}
+  - {fileID: 8300000, guid: 0a8dd7329f40d554fb869f02ac8edce1, type: 3}
+  explodeClip: {fileID: 8300000, guid: fcb8befaecd23e3439330aa4b5d8e07f, type: 3}
 --- !u!114 &7064147469925891015
 MonoBehaviour:
   m_ObjectHideFlags: 0

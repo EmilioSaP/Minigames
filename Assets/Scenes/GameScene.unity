@@ -878,6 +878,7 @@ MonoBehaviour:
   - {fileID: 299878152}
   - {fileID: 1807769887}
   - {fileID: 2007432565}
+  disableMovementOnSpawn: 1
   selectionMode: 0
 --- !u!1 &297167682
 GameObject:
@@ -2201,6 +2202,7 @@ GameObject:
   - component: {fileID: 575880747}
   - component: {fileID: 575880746}
   - component: {fileID: 575880748}
+  - component: {fileID: 575880749}
   m_Layer: 0
   m_Name: MatchFlow
   m_TagString: Untagged
@@ -2267,6 +2269,18 @@ MonoBehaviour:
   preparationTimeout: 45
   minimumPlayersToStart: 1
   requireLocalPlayerSpawn: 1
+--- !u!114 &575880749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 575880745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b073592d4f876874b8b5be32dd2cd4ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MatchPhaseControlBridge
 --- !u!1 &590735191
 GameObject:
   m_ObjectHideFlags: 0
@@ -4256,6 +4270,18 @@ MonoBehaviour:
       - m_Target: {fileID: 331484476}
         m_TargetAssemblyTypeName: NetworkMusicController, Assembly-CSharp
         m_MethodName: ShuffleFromHost
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1764040710}
+        m_TargetAssemblyTypeName: PauseGameScript, Assembly-CSharp
+        m_MethodName: TogglePause
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

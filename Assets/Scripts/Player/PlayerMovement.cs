@@ -11,6 +11,9 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float jumpHeight = 2f;
     [SerializeField] private float gravity = -9.81f;
 
+    [SerializeField] private NetworkPlayerAudio networkPlayerAudio;
+
+
     public bool IsMoving { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsJumping { get; private set; }
@@ -52,7 +55,11 @@ public class PlayerMovement : NetworkBehaviour
         {
             // Push the player slightly into the ground to ensure they stay grounded on slopes
             verticalVelocity.y = -2f; 
-            IsJumping = false;
+            if (IsJumping)
+            {
+                networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Land);
+                IsJumping = false;
+            }
         }
 
         if (!movementEnabled)
@@ -92,6 +99,7 @@ public class PlayerMovement : NetworkBehaviour
         {
             verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
             IsJumping = true;
+            networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Jump);
         }
 
         // 5. Apply Gravity
