@@ -17,6 +17,7 @@ public sealed class AudioManager : MonoBehaviour
 
     private bool isTemporaryMusicActive;
     private bool shouldResumeMainMusicAfterTemporary;
+    private bool mainTrackChangedDuringTemporary;
 
     public bool IsTemporaryMusicActive => isTemporaryMusicActive;
     public bool IsMainMusicPlaying => musicSource != null && musicSource.isPlaying;
@@ -55,23 +56,45 @@ public sealed class AudioManager : MonoBehaviour
     /// Starts/replaces the main music track. Starting new main music stops any temporary track.
     /// Main and temporary sources should both route to the Music AudioMixer group.
     /// </summary>
-    public void PlayMusic(AudioClip clip, bool loop = true, bool interruptTemporary = false)
+    public void PlayMusic(AudioClip clip, bool loop = true)
     {
         if (clip == null || musicSource == null)
             return;
-        if (interruptTemporary){
-            ClearTemporaryMusic(resumeMainMusic: false);
-            musicSource.Stop();
-            musicSource.clip = clip;
-            musicSource.loop = loop;
-            musicSource.time = 0f;
-            musicSource.Play();
+
+        ClearTemporaryMusic(resumeMainMusic: false);
+
+        musicSource.Stop();
+        musicSource.clip = clip;
+        musicSource.loop = loop;
+        musicSource.time = 0f;
+        musicSource.Play();
+    }
+
+    /// <summary>
+    /// Changes the underlying main soundtrack without interrupting temporary music.
+    /// Use this for server-selected/network-synchronized tracks. If temporary music is
+    /// active, the new main track is prepared at time zero and remains paused until
+    /// the temporary track ends. The existing resume decision is preserved.
+    /// </summary>
+    public void SetMainMusic(AudioClip clip, bool loop = true)
+    {
+        if (clip == null || musicSource == null)
+            return;
+
+        musicSource.Stop();
+        musicSource.clip = clip;
+        musicSource.loop = loop;
+        musicSource.time = 0f;
+
+        if (isTemporaryMusicActive)
+        {
+            // The current temporary track keeps playing. Remember that the main
+            // source now needs a fresh Play() (rather than UnPause()) afterward.
+            mainTrackChangedDuringTemporary = true;
         }
         else
         {
-            musicSource.clip = clip;
-            musicSource.loop = loop;
-            musicSource.time = 0f;
+            musicSource.Play();
         }
     }
 
@@ -88,6 +111,7 @@ public sealed class AudioManager : MonoBehaviour
         if (!isTemporaryMusicActive)
         {
             shouldResumeMainMusicAfterTemporary = musicSource.isPlaying;
+            mainTrackChangedDuringTemporary = false;
 
             if (shouldResumeMainMusicAfterTemporary)
                 musicSource.Pause();
@@ -148,11 +172,19 @@ public sealed class AudioManager : MonoBehaviour
         }
 
         bool shouldResume = isTemporaryMusicActive && shouldResumeMainMusicAfterTemporary;
+        bool mainTrackChanged = mainTrackChangedDuringTemporary;
+
         isTemporaryMusicActive = false;
         shouldResumeMainMusicAfterTemporary = false;
+        mainTrackChangedDuringTemporary = false;
 
         if (resumeMainMusic && shouldResume && musicSource != null && musicSource.clip != null)
-            musicSource.UnPause();
+        {
+            if (mainTrackChanged)
+                musicSource.Play(); // Start the newly selected main track from the beginning.
+            else
+                musicSource.UnPause(); // Resume the original track at its previous position.
+        }
     }
 
     private void ValidateSources()

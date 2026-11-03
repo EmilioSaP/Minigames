@@ -108,7 +108,7 @@ public class LobbySpawnManager : MonoBehaviour
         if (networkManager.IsClient)
             StartCoroutine(EnableLocalPlayerAfterTransition());
 
-        AudioManager.Instance.PlayMusic(lobbyClip, true, false);
+        AudioManager.Instance.PlayMusic(lobbyClip, true);
     }
 
     private IEnumerator EnableLocalPlayerAfterTransition()

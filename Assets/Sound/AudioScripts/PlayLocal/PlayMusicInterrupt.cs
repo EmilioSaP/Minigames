@@ -12,6 +12,6 @@ public class PlayMusicInterrupt : MonoBehaviour
             Debug.LogWarning("PlayMusicInterrupt: No audio clip assigned.", this);
             return;
         }
-        AudioManager.Instance.PlayMusic(audioClip, true, true);
+        AudioManager.Instance.PlayMusic(audioClip, true);
     }
 }

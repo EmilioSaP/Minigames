@@ -163,7 +163,7 @@ public sealed class NetworkMusicController : NetworkBehaviour
         }
 
         // This does not stop temporary music (e.g. pause-menu music).
-        AudioManager.Instance.PlayMusic(clip);
+        AudioManager.Instance.SetMainMusic(clip, loopTracks);
 
         lastAppliedTrackIndex = index;
         playbackPending = false;
