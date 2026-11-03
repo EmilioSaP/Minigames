@@ -1,13 +1,18 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class NetworkObjectSpawn : MonoBehaviour
 {
     [SerializeField] private NetworkObject[] networkObjectPrefabs;
 
+    private NetworkManager networkManager;
+    private NetworkSceneManager networkSceneManager;
     private bool hasSpawnedSessionObjects;
     private bool isSubscribedToServerLifecycle;
+    private bool isSubscribedToSceneEvents;
 
     private void OnEnable()
     {
@@ -16,13 +21,15 @@ public class NetworkObjectSpawn : MonoBehaviour
 
     private void OnDisable()
     {
-        if (NetworkManager.Singleton != null && isSubscribedToServerLifecycle)
+        if (isSubscribedToServerLifecycle && networkManager != null)
         {
-            NetworkManager.Singleton.OnServerStarted -= SpawnSessionObjects;
-            NetworkManager.Singleton.OnServerStopped -= ResetSessionObjects;
+            networkManager.OnServerStarted -= OnServerStarted;
+            networkManager.OnServerStopped -= ResetSessionObjects;
         }
 
         isSubscribedToServerLifecycle = false;
+        UnsubscribeFromSceneEvents();
+        networkManager = null;
     }
 
     private void Update()
@@ -37,14 +44,60 @@ public class NetworkObjectSpawn : MonoBehaviour
 
     private void SubscribeToServerStarted()
     {
-        if (isSubscribedToServerLifecycle || NetworkManager.Singleton == null)
+        networkManager = NetworkManager.Singleton;
+        if (networkManager == null)
             return;
 
-        NetworkManager.Singleton.OnServerStarted += SpawnSessionObjects;
-        NetworkManager.Singleton.OnServerStopped += ResetSessionObjects;
-        isSubscribedToServerLifecycle = true;
+        if (!isSubscribedToServerLifecycle)
+        {
+            networkManager.OnServerStarted += OnServerStarted;
+            networkManager.OnServerStopped += ResetSessionObjects;
+            isSubscribedToServerLifecycle = true;
+        }
 
-        if (NetworkManager.Singleton.IsServer)
+        SubscribeToSceneEvents();
+    }
+
+    private void OnServerStarted()
+    {
+        SpawnSessionObjects();
+        SubscribeToSceneEvents();
+    }
+
+    private void SubscribeToSceneEvents()
+    {
+        if (isSubscribedToSceneEvents ||
+            networkManager == null ||
+            !networkManager.IsListening ||
+            !networkManager.NetworkConfig.EnableSceneManagement)
+        {
+            return;
+        }
+
+        networkSceneManager = networkManager.SceneManager;
+        if (networkSceneManager == null)
+            return;
+
+        networkSceneManager.OnLoadEventCompleted += HandleSceneLoadCompleted;
+        isSubscribedToSceneEvents = true;
+    }
+
+    private void UnsubscribeFromSceneEvents()
+    {
+        if (isSubscribedToSceneEvents && networkSceneManager != null)
+            networkSceneManager.OnLoadEventCompleted -= HandleSceneLoadCompleted;
+
+        networkSceneManager = null;
+        isSubscribedToSceneEvents = false;
+    }
+
+    private void HandleSceneLoadCompleted(
+        string sceneName,
+        LoadSceneMode _,
+        List<ulong> __,
+        List<ulong> ___)
+    {
+        if (sceneName == gameObject.scene.name)
             SpawnSessionObjects();
     }
 

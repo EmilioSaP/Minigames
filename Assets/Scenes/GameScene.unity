@@ -1086,6 +1086,89 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 315723464}
   m_CullTransparentMesh: 1
+--- !u!1 &331484473
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 331484475}
+  - component: {fileID: 331484474}
+  - component: {fileID: 331484476}
+  m_Layer: 0
+  m_Name: NetworkMusicControl
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &331484474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331484473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 447906753
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!4 &331484475
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331484473}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.47382, y: 10.12135, z: 18.25975}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &331484476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 331484473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b775c9b5cd30cf34992a153e841d3ac0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkMusicController
+  ShowTopMostFoldoutHeaderGroup: 1
+  playlist:
+  - {fileID: 8300000, guid: d282226e5d18dbf44a6555d22116f753, type: 3}
+  - {fileID: 8300000, guid: 29298a902d0e8244d9e5c0011dbfccc6, type: 3}
+  - {fileID: 8300000, guid: 0c41bcd86347fc04085d054892053b2d, type: 3}
+  - {fileID: 8300000, guid: c303d96075d092c4c91dd5d54fdcbcf6, type: 3}
+  - {fileID: 8300000, guid: e2443f639bfd8464cab57bf3695aa7f3, type: 3}
+  - {fileID: 8300000, guid: a2c452f99c0c041428b12c2ee3d14e4d, type: 3}
+  - {fileID: 8300000, guid: ab6cca190d7c036498888f7edaed6fdc, type: 3}
+  - {fileID: 8300000, guid: 76a2c1007d2081244b2cdc11070b21d8, type: 3}
+  loopTracks: 1
 --- !u!1 &397681484
 GameObject:
   m_ObjectHideFlags: 0
@@ -4088,7 +4171,7 @@ GameObject:
   - component: {fileID: 981007153}
   - component: {fileID: 981007152}
   m_Layer: 5
-  m_Name: Continue (1)
+  m_Name: Shuffle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4170,7 +4253,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1015368653}
+      - m_Target: {fileID: 331484476}
         m_TargetAssemblyTypeName: NetworkMusicController, Assembly-CSharp
         m_MethodName: ShuffleFromHost
         m_Mode: 1
@@ -4220,89 +4303,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 981007150}
   m_CullTransparentMesh: 1
---- !u!1 &1015368652
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1015368655}
-  - component: {fileID: 1015368654}
-  - component: {fileID: 1015368653}
-  m_Layer: 0
-  m_Name: LobbyMusicController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1015368653
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1015368652}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b775c9b5cd30cf34992a153e841d3ac0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NetworkMusicController
-  ShowTopMostFoldoutHeaderGroup: 1
-  playlist:
-  - {fileID: 8300000, guid: d282226e5d18dbf44a6555d22116f753, type: 3}
-  - {fileID: 8300000, guid: 29298a902d0e8244d9e5c0011dbfccc6, type: 3}
-  - {fileID: 8300000, guid: 0c41bcd86347fc04085d054892053b2d, type: 3}
-  - {fileID: 8300000, guid: c303d96075d092c4c91dd5d54fdcbcf6, type: 3}
-  - {fileID: 8300000, guid: e2443f639bfd8464cab57bf3695aa7f3, type: 3}
-  - {fileID: 8300000, guid: a2c452f99c0c041428b12c2ee3d14e4d, type: 3}
-  - {fileID: 8300000, guid: ab6cca190d7c036498888f7edaed6fdc, type: 3}
-  - {fileID: 8300000, guid: 76a2c1007d2081244b2cdc11070b21d8, type: 3}
-  loopTracks: 1
---- !u!114 &1015368654
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1015368652}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3441896633
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  m_InScenePlacedDisabledByDefault: 0
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  m_InScenePlaced: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 0
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
---- !u!4 &1015368655
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1015368652}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1451.6437, y: -0, z: 6382.375}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1019306372
 GameObject:
   m_ObjectHideFlags: 0
@@ -8815,4 +8815,4 @@ SceneRoots:
   - {fileID: 1020634390}
   - {fileID: 1972131285}
   - {fileID: 575880747}
-  - {fileID: 1015368655}
+  - {fileID: 331484475}
