@@ -18,6 +18,7 @@ public sealed class PlayerAudio : MonoBehaviour
     [SerializeField] private AudioClip dropClip;
     [SerializeField] private AudioClip[] hurtClips;
     [SerializeField] private AudioClip explodeClip;
+    [SerializeField] private AudioClip spawnClip;
 
     private void Awake()
     {
@@ -43,13 +44,14 @@ public sealed class PlayerAudio : MonoBehaviour
         worldEmitter.Play(clip, volumeScale);
     }
 
-    public void PlayJump(float volumeScale = 1f) => Play(PlayerSoundEvent.Jump, volumeScale);
+    public void PlayJump(float volumeScale = 0.4f) => Play(PlayerSoundEvent.Jump, volumeScale);
     public void PlayThrow(float volumeScale = 1f) => Play(PlayerSoundEvent.Throw, volumeScale);
     public void PlayLand(float volumeScale = 1f) => Play(PlayerSoundEvent.Land, volumeScale);
     public void PlayPickup(float volumeScale = 1f) => Play(PlayerSoundEvent.Pickup, volumeScale);
     public void PlayDrop(float volumeScale = 1f) => Play(PlayerSoundEvent.Drop, volumeScale);
     public void PlayHurt(float volumeScale = 1f) => Play(PlayerSoundEvent.Hurt, volumeScale);
     public void PlayExplode(float volumeScale = 1f) => Play(PlayerSoundEvent.Explode, volumeScale);
+    public void PlaySpawn(float volumeScale = 1f) => Play(PlayerSoundEvent.Spawn, volumeScale);
     private AudioClip GetClip(PlayerSoundEvent soundEvent)
     {
         switch (soundEvent)
@@ -61,6 +63,7 @@ public sealed class PlayerAudio : MonoBehaviour
             case PlayerSoundEvent.Drop: return dropClip;
             case PlayerSoundEvent.Hurt: return hurtClips.Length > 0 ? hurtClips[Random.Range(0, hurtClips.Length)] : null;
             case PlayerSoundEvent.Explode: return explodeClip;
+            case PlayerSoundEvent.Spawn: return spawnClip;
             default: return null;
         }
     }
@@ -79,4 +82,5 @@ public enum PlayerSoundEvent : byte
     Drop = 4,
     Hurt = 5,
     Explode = 6,
+    Spawn = 7,
 }

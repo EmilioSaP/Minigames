@@ -227,10 +227,36 @@ public class GameSpawnManager : MonoBehaviour, IMatchSpawnReadiness
         disableMovementOnSpawn
         );
 
+        spawnHandler.ApplySpawnFromServer(
+        spawnPoint.position,
+        spawnPoint.rotation,
+        disableMovementOnSpawn
+        );
+
+        // Register the initial spawn as checkpoint zero.
+        PlayerCheckpointState checkpointState =
+            playerObject.GetComponent<PlayerCheckpointState>();
+
+        if (checkpointState != null)
+        {
+            checkpointState.SetInitialSpawnServer(
+                spawnPoint.position,
+                spawnPoint.rotation
+            );
+        }
+        else
+        {
+            Debug.LogWarning(
+                $"Player {clientId} is missing PlayerCheckpointState."
+            );
+        }
+        
         placedClientIds.Add(clientId);
 
         Debug.Log(
             $"Spawned client {clientId} at {spawnPoint.position}");
+
+
     }
 
     private Transform GetNextSpawnPoint()

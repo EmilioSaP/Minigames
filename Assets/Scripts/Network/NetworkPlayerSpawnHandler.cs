@@ -1,4 +1,5 @@
 
+using System;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -7,17 +8,28 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
 {
     public bool HasAppliedSpawn { get; private set; }
 
+    // Server-side notification that the respawn teleport has been applied.
+    public event Action RespawnTeleportAppliedServer;
+
+    private bool respawnTeleportPending;
+
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
         HasAppliedSpawn = false;
     }
 
-    // Applies a spawn selected by a server-side scene manager.
-    public void ApplySpawnFromServer(Vector3 position, Quaternion rotation, bool restrictMovement)
+    // --------------------------------------------------
+    // INITIAL SPAWNING
+    // --------------------------------------------------
+
+    public void ApplySpawnFromServer(
+        Vector3 position,
+        Quaternion rotation,
+        bool restrictMovement)
     {
         if (!IsServer)
-        return;
+            return;
 
         if (IsOwner)
         {
@@ -33,14 +45,6 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
         }
     }
 
-    public void ResetSpawnStatus()
-    {
-        if (!IsOwner)
-            return;
-
-        HasAppliedSpawn = false;
-    }
-
     [Rpc(SendTo.Owner)]
     private void ApplySpawnPositionRpc(
         Vector3 position,
@@ -51,15 +55,107 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
     }
 
     private void ApplySpawnLocally(
-    Vector3 position,
-    Quaternion rotation,
-    bool restrictMovement)
+        Vector3 position,
+        Quaternion rotation,
+        bool restrictMovement)
     {
         if (!IsOwner)
             return;
 
         HasAppliedSpawn = false;
 
+        ApplyTeleportLocally(position, rotation);
+
+        DisablePlayer disablePlayer = GetComponent<DisablePlayer>();
+
+        if (disablePlayer != null)
+            disablePlayer.SpawnRestrict(restrictMovement);
+
+        HasAppliedSpawn = true;
+    }
+
+    public void ResetSpawnStatus()
+    {
+        if (IsOwner)
+            HasAppliedSpawn = false;
+    }
+
+    // --------------------------------------------------
+    // RESPAWNING
+    // --------------------------------------------------
+
+    // Server requests a respawn teleport.
+    // Returns false if another teleport is already pending.
+    public bool RespawnFromServer(
+        Vector3 position,
+        Quaternion rotation)
+    {
+        if (!IsServer || !IsSpawned || respawnTeleportPending)
+            return false;
+
+        respawnTeleportPending = true;
+
+        if (IsOwner)
+        {
+            // Host's local player.
+            ApplyTeleportLocally(position, rotation);
+            CompleteRespawnTeleportServer();
+        }
+        else
+        {
+            // Remote player's owner.
+            RespawnPositionRpc(position, rotation);
+        }
+
+        return true;
+    }
+
+    [Rpc(SendTo.Owner)]
+    private void RespawnPositionRpc(
+        Vector3 position,
+        Quaternion rotation)
+    {
+        if (!IsOwner)
+            return;
+
+        ApplyTeleportLocally(position, rotation);
+
+        // Confirm to the server that the teleport was applied.
+        AcknowledgeRespawnTeleportRpc();
+    }
+
+    [Rpc(SendTo.Server)]
+    private void AcknowledgeRespawnTeleportRpc(
+        RpcParams rpcParams = default)
+    {
+        if (!IsServer)
+            return;
+
+        // Only the actual owner can acknowledge this teleport.
+        if (rpcParams.Receive.SenderClientId != OwnerClientId)
+            return;
+
+        CompleteRespawnTeleportServer();
+    }
+
+    private void CompleteRespawnTeleportServer()
+    {
+        if (!IsServer || !respawnTeleportPending)
+            return;
+
+        respawnTeleportPending = false;
+
+        RespawnTeleportAppliedServer?.Invoke();
+    }
+
+    // --------------------------------------------------
+    // SHARED TELEPORT LOGIC
+    // --------------------------------------------------
+
+    private void ApplyTeleportLocally(
+        Vector3 position,
+        Quaternion rotation)
+    {
         CharacterController controller =
             GetComponent<CharacterController>();
 
@@ -72,15 +168,6 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
 
         if (wasEnabled)
             controller.enabled = true;
-
-        DisablePlayer disablePlayer = GetComponent<DisablePlayer>();
-
-        if (disablePlayer != null)
-            disablePlayer.SpawnRestrict(restrictMovement);
-        else
-            Debug.LogWarning("Player prefab is missing DisablePlayer.");
-
-        HasAppliedSpawn = true;
     }
 
     public void ReleaseSpawnRestriction()

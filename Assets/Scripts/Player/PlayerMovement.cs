@@ -57,7 +57,7 @@ public class PlayerMovement : NetworkBehaviour
             verticalVelocity.y = -2f; 
             if (IsJumping)
             {
-                networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Land);
+                //networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Land);
                 IsJumping = false;
             }
         }
