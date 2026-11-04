@@ -291,7 +291,10 @@ public class PlayerMovement : NetworkBehaviour
                 IsJumping = false;
 
                 if (networkPlayerAudio != null)
+                {
                     networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Land);
+                }
+                    
             }
 
             // Refresh coyote time while grounded.
@@ -310,7 +313,9 @@ public class PlayerMovement : NetworkBehaviour
         // preventing another jump while still airborne.
         bool canJump = isGrounded || coyoteTimer > 0f;
 
-        if (jumpPressed && canJump)
+        bool shouldJump = jumpPressed || (jumpHeld && isGrounded && !IsJumping);
+
+        if (shouldJump && canJump)
         {
             verticalVelocity =
                 Mathf.Sqrt(jumpHeight * -2f * gravity);

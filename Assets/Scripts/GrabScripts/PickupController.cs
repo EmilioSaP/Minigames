@@ -17,6 +17,7 @@ public class PickupController : MonoBehaviour
     [SerializeField] private Transform grabPosition;
     [SerializeField] private GameObject playerView;
     [SerializeField] private NetworkPlayerAudio networkPlayerAudio;
+    [SerializeField] private AudioClip fullchargeClip;
 
     [Header("Throw")]
     [SerializeField] private float minimumThrowCharge = 0.1f;
@@ -41,6 +42,7 @@ public class PickupController : MonoBehaviour
 
     private float throwChargeTimer;
     private bool interactionEnabled = true;
+    private bool fullChargeSfxPlayed;
 
     public Transform GrabPosition => grabPosition;
 
@@ -253,6 +255,7 @@ public class PickupController : MonoBehaviour
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             throwChargeTimer = 0f;
+            fullChargeSfxPlayed = false;
             pickupState = PickupState.ChargingThrow;
         }
     }
@@ -273,6 +276,11 @@ public class PickupController : MonoBehaviour
                     throwChargeTimer + Time.deltaTime,
                     heldObject.ThrowChargeTime
                 );
+            }
+            if (!fullChargeSfxPlayed && ThrowChargeNormalized >= 1f)
+            {
+                AudioManager.Instance.PlayLocalSFX(fullchargeClip);
+                fullChargeSfxPlayed = true;
             }
 
             return;
