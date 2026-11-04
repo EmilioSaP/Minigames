@@ -1,4 +1,3 @@
-
 using System;
 using UnityEngine;
 
@@ -55,6 +54,11 @@ public class CreateParkourMap : MatchPreparationTask
         PlatformPiece current =
             Instantiate(startPrefab, transform.position, transform.rotation);
 
+        // Checkpoint numbering starts at 1.
+        int checkpointOrder = 1;
+
+        AssignCheckpointOrder(current, checkpointOrder++);
+
         int minCount = Mathf.Min(countRange.x, countRange.y);
         int maxCount = Mathf.Max(countRange.x, countRange.y);
 
@@ -77,16 +81,23 @@ public class CreateParkourMap : MatchPreparationTask
             if (platformPrefabs[index] == null)
                 throw new Exception($"Platform prefab at index {index} is missing.");
 
-            current = SpawnNext(current, platformPrefabs[index], random);
+            current = SpawnNext(
+                current,
+                platformPrefabs[index],
+                random,
+                checkpointOrder++
+            );
         }
 
-        SpawnNext(current, goalPrefab, random);
+        // The goal also receives a checkpoint order.
+        SpawnNext(current, goalPrefab, random, checkpointOrder);
     }
 
     private PlatformPiece SpawnNext(
         PlatformPiece from,
         PlatformPiece prefab,
-        System.Random random)
+        System.Random random,
+        int checkpointOrder)
     {
         if (from.exitPoints == null || from.exitPoints.Length == 0)
             throw new Exception("A platform has no exit points.");
@@ -114,6 +125,7 @@ public class CreateParkourMap : MatchPreparationTask
         if (next.startPoint == null)
         {
             Destroy(next.gameObject);
+
             throw new Exception(
                 $"Platform prefab {prefab.name} has no startPoint assigned."
             );
@@ -122,7 +134,25 @@ public class CreateParkourMap : MatchPreparationTask
         next.transform.position +=
             startPosition - next.startPoint.position;
 
+        AssignCheckpointOrder(next, checkpointOrder);
+
         return next;
+    }
+
+    private void AssignCheckpointOrder(PlatformPiece piece, int order)
+    {
+        CheckpointTrigger checkpoint = piece.CheckpointTrigger;
+
+        if (checkpoint == null)
+        {
+            Destroy(piece.gameObject);
+
+            throw new Exception(
+                $"Platform prefab {piece.name} has no CheckpointTrigger child."
+            );
+        }
+
+        checkpoint.SetCheckpointOrder(order);
     }
 
     private static float Range(

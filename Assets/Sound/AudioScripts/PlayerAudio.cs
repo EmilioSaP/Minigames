@@ -44,13 +44,13 @@ public sealed class PlayerAudio : MonoBehaviour
         worldEmitter.Play(clip, volumeScale);
     }
 
-    public void PlayJump(float volumeScale = 0.4f) => Play(PlayerSoundEvent.Jump, volumeScale);
+    public void PlayJump(float volumeScale = 0.25f) => Play(PlayerSoundEvent.Jump, volumeScale);
     public void PlayThrow(float volumeScale = 1f) => Play(PlayerSoundEvent.Throw, volumeScale);
-    public void PlayLand(float volumeScale = 1f) => Play(PlayerSoundEvent.Land, volumeScale);
+    public void PlayLand(float volumeScale = 0.7f) => Play(PlayerSoundEvent.Land, volumeScale);
     public void PlayPickup(float volumeScale = 1f) => Play(PlayerSoundEvent.Pickup, volumeScale);
     public void PlayDrop(float volumeScale = 1f) => Play(PlayerSoundEvent.Drop, volumeScale);
     public void PlayHurt(float volumeScale = 1f) => Play(PlayerSoundEvent.Hurt, volumeScale);
-    public void PlayExplode(float volumeScale = 1f) => Play(PlayerSoundEvent.Explode, volumeScale);
+    public void PlayExplode(float volumeScale = 0.8f) => Play(PlayerSoundEvent.Explode, volumeScale);
     public void PlaySpawn(float volumeScale = 1f) => Play(PlayerSoundEvent.Spawn, volumeScale);
     private AudioClip GetClip(PlayerSoundEvent soundEvent)
     {

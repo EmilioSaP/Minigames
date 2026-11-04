@@ -895,7 +895,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RespawnManager
   respawnMode: 1
   maxRespawns: 2
-  respawnDelay: 3
+  respawnDelay: 2
   teleportAckTimeout: 10
 --- !u!1 &297167682
 GameObject:
@@ -1343,7 +1343,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &399723077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4723,7 +4723,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1054000720
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5208,7 +5208,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1207820179
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9127,7 +9127,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2099469409
 MonoBehaviour:
   m_ObjectHideFlags: 0

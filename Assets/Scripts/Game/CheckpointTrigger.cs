@@ -10,6 +10,8 @@ public class CheckpointTrigger : MonoBehaviour
 
     [Tooltip("Where the player will actually respawn.")]
     [SerializeField] private Transform respawnPoint;
+    public int CheckpointOrder => checkpointOrder;
+
 
     private void Reset()
     {
@@ -61,5 +63,10 @@ public class CheckpointTrigger : MonoBehaviour
             respawnPoint.position,
             respawnPoint.rotation
         );
+    }
+
+    public void SetCheckpointOrder(int order)
+    {
+        checkpointOrder = Mathf.Max(1, order);
     }
 }
