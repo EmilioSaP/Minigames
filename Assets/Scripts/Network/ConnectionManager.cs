@@ -306,6 +306,9 @@ public class ConnectionManager : MonoBehaviour
 
         if (!isConnectedParty)
         {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
             if (joinCodeTextField != null)
                 joinCodeTextField.text = string.Empty;
 
