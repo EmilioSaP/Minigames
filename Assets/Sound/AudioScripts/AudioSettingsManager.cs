@@ -35,6 +35,10 @@ public sealed class AudioSettingsManager : MonoBehaviour
     private void Awake()
     {
         LoadSettings();
+    }
+
+    private void Start()
+    {
         ApplyAllVolumes();
     }
 

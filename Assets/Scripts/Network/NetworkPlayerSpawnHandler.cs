@@ -153,9 +153,15 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
     // --------------------------------------------------
 
     private void ApplyTeleportLocally(
-        Vector3 position,
-        Quaternion rotation)
+    Vector3 position,
+    Quaternion rotation)
     {
+        // Clear walking, dash, knockback, and gravity velocity.
+        PlayerMovement playerMovement = GetComponent<PlayerMovement>();
+
+        if (playerMovement != null)
+            playerMovement.ResetMotion();
+
         CharacterController controller =
             GetComponent<CharacterController>();
 
@@ -168,6 +174,10 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
 
         if (wasEnabled)
             controller.enabled = true;
+
+        // Ensure no previous velocity is carried into the new position.
+        if (playerMovement != null)
+            playerMovement.ResetMotion();
     }
 
     public void ReleaseSpawnRestriction()

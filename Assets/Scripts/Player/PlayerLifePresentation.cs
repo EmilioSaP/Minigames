@@ -8,6 +8,7 @@ public class PlayerLifePresentation : NetworkBehaviour
     [SerializeField] private GameObject[] playerVisuals;
     [SerializeField] private ParticleSystem deathBurst;
     [SerializeField] private NetworkPlayerAudio networkPlayerAudio;
+    private PlayerMovement playerMovement;
 
     private PlayerHealth playerHealth;
     private DisablePlayer disablePlayer;
@@ -20,6 +21,7 @@ public class PlayerLifePresentation : NetworkBehaviour
 
         playerHealth = GetComponent<PlayerHealth>();
         disablePlayer = GetComponent<DisablePlayer>();
+        playerMovement = GetComponent<PlayerMovement>();
 
         if (playerHealth == null)
         {
@@ -79,6 +81,13 @@ public class PlayerLifePresentation : NetworkBehaviour
 
         // Only the owning player needs their local controls restricted.
         if (!IsOwner || disablePlayer == null)
+            return;
+
+        // Stop all momentum and gravity when dead.
+        if (playerMovement != null)
+            playerMovement.SetMotionFrozen(isDead);
+
+        if (disablePlayer == null)
             return;
 
         if (isDead)

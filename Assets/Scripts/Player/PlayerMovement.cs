@@ -1,3 +1,4 @@
+
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -5,23 +6,65 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : NetworkBehaviour
 {
-    [Header("Movement Settings")]
+    [Header("Movement Speeds")]
     [SerializeField] private float walkSpeed = 5f;
     [SerializeField] private float sprintSpeed = 8f;
+
+    [Header("Ground Movement")]
+    [SerializeField] private float groundAcceleration = 22f;
+    [SerializeField] private float groundDeceleration = 25f;
+
+    [Header("Air Movement")]
+    [SerializeField] private float airAcceleration = 7f;
+    [SerializeField] private float airDeceleration = 2.5f;
+
+    [Header("Jump and Gravity")]
     [SerializeField] private float jumpHeight = 2f;
-    [SerializeField] private float gravity = -9.81f;
+    [SerializeField] private float gravity = -20f;
+    [SerializeField] private float groundedGravity = -2f;
 
+    [Header("Jump Settings")]
+    [SerializeField] private float coyoteTime = 0.1f;
+    [SerializeField, Min(0f)] private float minimumJumpHeight = 0.35f;
+    [SerializeField, Min(0.01f)] private float jumpHoldDuration = 0.25f;
+
+    private float coyoteTimer;
+    private float jumpHoldTimer;
+    private bool isAirborne;
+    private bool jumpWasHeld;
+
+    public bool IsAirborne => isAirborne;
+
+    [Header("External Forces")]
+    [SerializeField] private float externalVelocityDecay = 14f;
+    [SerializeField] private float maxExternalSpeed = 12f;
+
+    [Header("Audio")]
     [SerializeField] private NetworkPlayerAudio networkPlayerAudio;
-
+    
 
     public bool IsMoving { get; private set; }
     public bool IsSprinting { get; private set; }
     public bool IsJumping { get; private set; }
 
+    public bool IsMovementEnabled => movementEnabled;
+
+    public bool CanReceiveMovementInput =>
+        IsOwner && movementEnabled && !motionFrozen;
+
+    // Normal movement momentum.
+    private Vector3 horizontalVelocity;
+
+    // Additional forces, independent of normal movement.
+    private Vector3 externalVelocity;
+
+    // Vertical movement and gravity.
+    private float verticalVelocity;
+
     private CharacterController characterController;
+
     private bool movementEnabled = true;
-    private Vector3 verticalVelocity; // Renamed to clarify it only handles Up/Down
-    
+    private bool motionFrozen;
 
     private void Awake()
     {
@@ -30,10 +73,25 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Update()
     {
-        if (!IsOwner) return;
+        if (!IsOwner || characterController == null ||
+            !characterController.enabled)
+        {
+            return;
+        }
+
+        if (motionFrozen)
+        {
+            // A frozen player does not receive gravity or momentum.
+            ResetMotion();
+            return;
+        }
 
         HandleMovement();
     }
+
+    // --------------------------------------------------
+    // MOVEMENT RESTRICTIONS
+    // --------------------------------------------------
 
     public void SetMovementEnabled(bool state)
     {
@@ -41,73 +99,259 @@ public class PlayerMovement : NetworkBehaviour
 
         if (!state)
         {
+            // Remove existing horizontal momentum when controls
+            // are restricted, but keep gravity active.
+            horizontalVelocity = Vector3.zero;
+            externalVelocity = Vector3.zero;
+
             IsMoving = false;
             IsSprinting = false;
             IsJumping = false;
         }
     }
 
+    // Completely freezes or resumes the movement simulation.
+    // Used for death, respawning, and other full-motion restrictions.
+    public void SetMotionFrozen(bool frozen)
+    {
+        motionFrozen = frozen;
+
+        if (frozen)
+            ResetMotion();
+    }
+
+    // --------------------------------------------------
+    // MOVEMENT RESET
+    // --------------------------------------------------
+
+    // Clears every accumulated velocity.
+    // Call this when teleporting, dying, or respawning.
+    public void ResetMotion()
+    {
+        horizontalVelocity = Vector3.zero;
+        externalVelocity = Vector3.zero;
+        verticalVelocity = 0f;
+
+        IsMoving = false;
+        IsSprinting = false;
+        IsJumping = false;
+    }
+
+    // --------------------------------------------------
+    // EXTERNAL FORCES
+    // --------------------------------------------------
+
+    // Applies an additional horizontal impulse.
+    // The vector represents an instantaneous change in velocity
+    // (metres per second), not a force in Newtons.
+    public void AddHorizontalImpulse(Vector3 impulse)
+    {
+        if (!IsOwner || motionFrozen)
+            return;
+
+        impulse = Vector3.ProjectOnPlane(impulse, Vector3.up);
+
+        externalVelocity += impulse;
+
+        externalVelocity =
+            Vector3.ClampMagnitude(externalVelocity, maxExternalSpeed);
+    }
+
+    // --------------------------------------------------
+    // MAIN MOVEMENT
+    // --------------------------------------------------
+
     private void HandleMovement()
     {
-        // 1. Check ground state
+        float deltaTime = Time.deltaTime;
         bool isGrounded = characterController.isGrounded;
-        if (isGrounded && verticalVelocity.y < 0)
-        {
-            // Push the player slightly into the ground to ensure they stay grounded on slopes
-            verticalVelocity.y = -2f; 
-            if (IsJumping)
-            {
-                //networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Land);
-                IsJumping = false;
-            }
-        }
 
-        if (!movementEnabled)
-        {
-            // If movement is disabled, we still want to apply gravity to keep the player grounded
-            verticalVelocity.y += gravity * Time.deltaTime;
-            characterController.Move(verticalVelocity * Time.deltaTime);
-            return;
-        }
-
-        // 2. Read Inputs
         Vector2 input = Vector2.zero;
-        IsSprinting = false;
-        bool jumpPressed = false;
 
-        if (Keyboard.current != null)
+        bool sprintInput = false;
+        bool jumpHeld = Keyboard.current != null &&
+                        Keyboard.current.spaceKey.isPressed;
+
+        if (movementEnabled && Keyboard.current != null)
         {
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) input.y += 1f;
-            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) input.y -= 1f;
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) input.x -= 1f;
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) input.x += 1f;
+            if (Keyboard.current.wKey.isPressed ||
+                Keyboard.current.upArrowKey.isPressed)
+                input.y += 1f;
 
-            IsSprinting = Keyboard.current.shiftKey.isPressed || Keyboard.current.qKey.isPressed;;
-            jumpPressed = Keyboard.current.spaceKey.isPressed;
+            if (Keyboard.current.sKey.isPressed ||
+                Keyboard.current.downArrowKey.isPressed)
+                input.y -= 1f;
+
+            if (Keyboard.current.aKey.isPressed ||
+                Keyboard.current.leftArrowKey.isPressed)
+                input.x -= 1f;
+
+            if (Keyboard.current.dKey.isPressed ||
+                Keyboard.current.rightArrowKey.isPressed)
+                input.x += 1f;
+
+            sprintInput =
+                Keyboard.current.shiftKey.isPressed ||
+                Keyboard.current.qKey.isPressed;
         }
 
-        // 3. Calculate Horizontal Movement
-        Vector3 move = transform.right * input.x + transform.forward * input.y;
-        move.Normalize();
-        
-        IsMoving = move.sqrMagnitude > 0.01f;
+        HandleJumpAndGravity(jumpHeld);
+
+        // --------------------------------------------------
+        // HORIZONTAL MOVEMENT
+        // --------------------------------------------------
+
+        Vector3 forward =
+            Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+
+        Vector3 right =
+            Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized;
+
+        Vector3 moveDirection = right * input.x + forward * input.y;
+
+        if (moveDirection.sqrMagnitude > 1f)
+            moveDirection.Normalize();
+
+        bool hasMovementInput = moveDirection.sqrMagnitude > 0.01f;
+
+        IsSprinting = movementEnabled && hasMovementInput && sprintInput;
+
         float currentSpeed = IsSprinting ? sprintSpeed : walkSpeed;
-        Vector3 horizontalVelocity = move * currentSpeed;
 
-        // 4. Calculate Jump
-        if (jumpPressed && isGrounded)
+        Vector3 targetVelocity =
+            movementEnabled
+                ? moveDirection * currentSpeed
+                : Vector3.zero;
+
+        float acceleration;
+
+        if (isGrounded)
         {
-            verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            IsJumping = true;
-            networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Jump);
+            acceleration = hasMovementInput
+                ? groundAcceleration
+                : groundDeceleration;
+        }
+        else
+        {
+            acceleration = hasMovementInput
+                ? airAcceleration
+                : airDeceleration;
         }
 
-        // 5. Apply Gravity
-        verticalVelocity.y += gravity * Time.deltaTime;
+        horizontalVelocity = Vector3.MoveTowards(
+            horizontalVelocity,
+            targetVelocity,
+            acceleration * deltaTime
+        );
 
-        // 6. COMBINE ALL MOVEMENT INTO A SINGLE MOVE CALL
-        // This prevents the "micro-bounce" that causes isGrounded to flicker on WebGL
-        Vector3 finalMovement = horizontalVelocity + verticalVelocity;
-        characterController.Move(finalMovement * Time.deltaTime);
+        IsMoving = horizontalVelocity.sqrMagnitude > 0.05f;
+
+        // --------------------------------------------------
+        // EXTERNAL FORCES
+        // --------------------------------------------------
+
+        // Dash and knockback gradually lose their influence.
+        externalVelocity = Vector3.MoveTowards(
+            externalVelocity,
+            Vector3.zero,
+            externalVelocityDecay * deltaTime
+        );
+
+        // --------------------------------------------------
+        // APPLY ALL MOVEMENT IN ONE CALL
+        // --------------------------------------------------
+
+        Vector3 finalVelocity =
+            horizontalVelocity +
+            externalVelocity +
+            Vector3.up * verticalVelocity;
+
+        characterController.Move(finalVelocity * deltaTime);
+
+        // Keep the CharacterController grounded after movement.
+        if (characterController.isGrounded && verticalVelocity < 0f)
+        {
+            verticalVelocity = groundedGravity;
+        }
+    }
+
+    private void HandleJumpAndGravity(bool jumpHeld)
+    {
+        bool isGrounded = characterController.isGrounded;
+        bool jumpPressed = jumpHeld && !jumpWasHeld;
+        bool jumpReleased = !jumpHeld && jumpWasHeld;
+        jumpWasHeld = jumpHeld;
+
+        // Detect landing, regardless of whether the player jumped.
+        if (isGrounded)
+        {
+            if (isAirborne)
+            {
+                isAirborne = false;
+                IsJumping = false;
+
+                if (networkPlayerAudio != null)
+                    networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Land);
+            }
+
+            // Refresh coyote time while grounded.
+            coyoteTimer = coyoteTime;
+
+            if (verticalVelocity < 0f)
+                verticalVelocity = groundedGravity;
+        }
+        else
+        {
+            isAirborne = true;
+            coyoteTimer -= Time.deltaTime;
+        }
+
+        // Hold-to-jump: jumping consumes the coyote window,
+        // preventing another jump while still airborne.
+        bool canJump = isGrounded || coyoteTimer > 0f;
+
+        if (jumpPressed && canJump)
+        {
+            verticalVelocity =
+                Mathf.Sqrt(jumpHeight * -2f * gravity);
+
+            IsJumping = true;
+            isAirborne = true;
+            jumpHoldTimer = 0f;
+
+            // Consume the available jump window.
+            coyoteTimer = 0f;
+
+            if (networkPlayerAudio != null)
+                networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Jump);
+        }
+
+        if (IsJumping && jumpHeld && !jumpPressed)
+            jumpHoldTimer = Mathf.Min(
+                jumpHoldTimer + Time.deltaTime,
+                jumpHoldDuration
+            );
+
+        if (IsJumping && jumpReleased && verticalVelocity > 0f)
+        {
+            float holdFraction = jumpHoldDuration > 0f
+                ? Mathf.Clamp01(jumpHoldTimer / jumpHoldDuration)
+                : 1f;
+            float minHeight = Mathf.Min(minimumJumpHeight, jumpHeight);
+            float minimumJumpVelocity = Mathf.Sqrt(minHeight * -2f * gravity);
+            float maximumJumpVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            float targetJumpVelocity = Mathf.Lerp(
+                minimumJumpVelocity,
+                maximumJumpVelocity,
+                holdFraction
+            );
+            float targetVelocity =
+                targetJumpVelocity + gravity * jumpHoldTimer;
+
+            verticalVelocity = Mathf.Min(verticalVelocity, targetVelocity);
+        }
+
+        // Apply gravity.
+        verticalVelocity += gravity * Time.deltaTime;
     }
 }
