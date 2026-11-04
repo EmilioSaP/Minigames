@@ -5759,7 +5759,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 442197133
+  GlobalObjectIdHash: 2074510670
   InScenePlacedSourceGlobalObjectIdHash: 3758220817
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -6074,6 +6074,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 3ce0ea292ce5bb24783bb95f428771c5, type: 3}
   - {fileID: 8300000, guid: 5248b18895cf9cf42875aad46ede8fa0, type: 3}
   - {fileID: 8300000, guid: 60fddfb702ef5e94698dacc80bbf22e7, type: 3}
+  - {fileID: 8300000, guid: 4869455b87572a144af79f2bb64d1278, type: 3}
+  - {fileID: 8300000, guid: 3ad45722676d4d242bdeb84d21d795a3, type: 3}
   throwClips:
   - {fileID: 8300000, guid: ca7dda526ee784641880f3226320f9c1, type: 3}
   - {fileID: 8300000, guid: d3b47380d2c96504aad2ec46c34f229c, type: 3}
@@ -6081,17 +6083,12 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 952c0268e6c8edb4396a1fe89fe4cee0, type: 3}
   - {fileID: 8300000, guid: 3e1a992cb1dfcc1459d5f0a844f1bd0f, type: 3}
   landClips:
-  - {fileID: 8300000, guid: 4a4ba2be8b3551f48879f48f74342b12, type: 3}
-  - {fileID: 8300000, guid: 298389cb83284054095cec2697e1824b, type: 3}
-  - {fileID: 8300000, guid: bb507e0041c632e41acef8337188499c, type: 3}
-  - {fileID: 8300000, guid: 415f8f37fff03bf4b9cc7033f1dcac06, type: 3}
-  - {fileID: 8300000, guid: b44b1eee4da73f24792bd751869a4df5, type: 3}
-  - {fileID: 8300000, guid: 2c00c4e93d496854c89db24c87600324, type: 3}
-  - {fileID: 8300000, guid: 6594fae646a56c14d85b81e45f8161cd, type: 3}
-  - {fileID: 8300000, guid: 6c55dbf5f149e994b917fb88c7bc838e, type: 3}
-  - {fileID: 8300000, guid: b807579a65145fe4f96130945d569cf4, type: 3}
-  - {fileID: 8300000, guid: fe228219fa03d61489f49a11aa18af01, type: 3}
+  - {fileID: 8300000, guid: faa371f2129574d4aa19ee76d4903dec, type: 3}
+  - {fileID: 8300000, guid: 5a2c9e0c9581cb241ac4673bfed5ca12, type: 3}
+  - {fileID: 8300000, guid: 4c4a6eae9bdf9fc4581fb5605cdc1f30, type: 3}
+  - {fileID: 8300000, guid: a938affde63fbac4da5bbcc8b7e544b6, type: 3}
   - {fileID: 8300000, guid: aece40cf1c9f45e44b3af30eaa6be8e4, type: 3}
+  - {fileID: 8300000, guid: 0365215c0bee3f94b915d9c5f1eaa989, type: 3}
   pickupClip: {fileID: 8300000, guid: ef9e45d8e3b1cfb4aa5810906d891551, type: 3}
   dropClip: {fileID: 8300000, guid: caeaa5737e53dec4eb251d590c556f67, type: 3}
   hurtClips:
