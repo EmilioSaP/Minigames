@@ -14,6 +14,27 @@ using UnityEngine;
 [RequireComponent(typeof(NetworkObject))]
 public sealed class NetworkMusicController : NetworkBehaviour
 {
+    public static NetworkMusicController Instance { get; private set; }
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    public override void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+        base.OnDestroy();
+    }
+    
     [Header("Scene playlist")]
     [Tooltip("All clients must have the same clips in the same order.")]
     [SerializeField] private AudioClip[] playlist;
