@@ -26,6 +26,16 @@ public class FadeCanvasGroupScript : MonoBehaviour
         StartCoroutine(FadeCanvasGroup(canvasGroup, 1f, 0f, deactivateAfter: true));
     }
 
+    public void SetAlpha(float alpha)
+    {
+        StopAllCoroutines();
+        if (canvasGroup == null)
+            canvasGroup = GetComponent<CanvasGroup>();
+
+        canvasGroup.alpha = Mathf.Clamp01(alpha);
+        canvasGroup.blocksRaycasts = alpha > 0f; // Disable interaction if fully transparent
+    }
+
     private IEnumerator FadeCanvasGroup(CanvasGroup cg, float start, float end, bool deactivateAfter = false)
     {
         float elapsed = 0f;

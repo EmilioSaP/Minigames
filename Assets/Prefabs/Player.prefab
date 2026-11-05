@@ -5836,9 +5836,9 @@ MonoBehaviour:
   walkSpeed: 5
   sprintSpeed: 8
   groundAcceleration: 70
-  groundDeceleration: 40
+  groundDeceleration: 60
   airAcceleration: 60
-  airDeceleration: 30
+  airDeceleration: 60
   jumpHeight: 1.4
   gravity: -9.81
   groundedGravity: -2
