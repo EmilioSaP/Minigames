@@ -84,7 +84,7 @@ public class MatchCountdownUI : MonoBehaviour
                 break;
 
             case MatchPhase.InProgress:
-                countAnimator.AnimateGo();
+                countAnimator.AnimateGo("Go!");
                 goCoroutine = StartCoroutine(HideGoAfterDelay());
                 break;
 

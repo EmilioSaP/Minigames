@@ -40,9 +40,9 @@ public class CountNumberAnimator : MonoBehaviour
             countdownAnimator.SetTrigger("Countdown");
     }
 
-    public void AnimateGo()
+    public void AnimateGo(string value)
     {
-        ShowText("GO!");
+        ShowText(value);
 
         if (goAudioClip != null)
             AudioManager.Instance.PlayLocalSFX(goAudioClip);
