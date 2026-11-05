@@ -5908,8 +5908,8 @@ MonoBehaviour:
   playerVisualHat: {fileID: 1399513047783566294}
   playerNameTag: {fileID: 5010893481299667180}
   offsets:
-  - {x: 0, y: 2, z: -5}
-  - {x: 0, y: 4, z: -10}
+  - {x: 0, y: 0, z: -5}
+  - {x: 0, y: 0, z: -10}
 --- !u!114 &4854004384682210410
 MonoBehaviour:
   m_ObjectHideFlags: 0

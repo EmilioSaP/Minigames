@@ -10,7 +10,6 @@ public class MatchCountdownUI : MonoBehaviour
     [SerializeField] private FadeCanvasGroupScript fadeCanvasGroup;
 
     [Header("Settings")]
-    [SerializeField] private float numberDisplayDuration = 0.5f;
     [SerializeField] private float goDisplayDuration = 0.75f;
 
     [Header("Audios")] // Containing audio clips for 3, 2, 1 countdown and GO.

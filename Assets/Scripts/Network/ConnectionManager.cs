@@ -173,6 +173,9 @@ public class ConnectionManager : MonoBehaviour
 
     public async void HostGame()
     {
+        if (isConnecting)
+            return;
+        
         isLeaving = false;
         isConnecting = true;
         PlayerSettings.PlayerName = GetPlayerName();
@@ -215,6 +218,7 @@ public class ConnectionManager : MonoBehaviour
             {
                 statusText.text = "Failed to start host.";
                 Debug.LogError("NetworkManager failed to start Host.");
+                isConnecting = false;
             }
         }
         catch (Exception e)
@@ -222,11 +226,14 @@ public class ConnectionManager : MonoBehaviour
             statusText.text = "Failed to create Relay.";
 
             Debug.LogError($"Host failed: {e}");
+            isConnecting = false;
         }
     }
 
     public async void JoinGame()
     {
+        if (isConnecting)
+            return;
         isLeaving = false;
         isConnecting = true;
         PlayerSettings.PlayerName = GetPlayerName();
@@ -237,6 +244,7 @@ public class ConnectionManager : MonoBehaviour
         if (string.IsNullOrEmpty(joinCode))
         {
             statusText.text = "Enter a join code.";
+            isConnecting = false;
             return;
         }
 
@@ -271,12 +279,13 @@ public class ConnectionManager : MonoBehaviour
             {
                 statusText.text = "Failed to start client.";
                 Debug.LogError("NetworkManager failed to start Client.");
+                isConnecting = false;
             }
         }
         catch (Exception e)
         {
             statusText.text = "Failed to join game.";
-
+            isConnecting = false;
             Debug.LogError($"Join failed: {e}");
         }
     }
