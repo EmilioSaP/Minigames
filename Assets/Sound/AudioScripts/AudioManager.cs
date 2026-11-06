@@ -18,6 +18,7 @@ public sealed class AudioManager : MonoBehaviour
     private bool isTemporaryMusicActive;
     private bool shouldResumeMainMusicAfterTemporary;
     private bool mainTrackChangedDuringTemporary;
+    private bool mainMusicNeedsPlay;
 
     public bool IsTemporaryMusicActive => isTemporaryMusicActive;
     public bool IsMainMusicPlaying => musicSource != null && musicSource.isPlaying;
@@ -68,15 +69,16 @@ public sealed class AudioManager : MonoBehaviour
         musicSource.loop = loop;
         musicSource.time = 0f;
         musicSource.Play();
+        mainMusicNeedsPlay = false;
     }
 
     /// <summary>
     /// Changes the underlying main soundtrack without interrupting temporary music.
     /// Use this for server-selected/network-synchronized tracks. If temporary music is
-    /// active, the new main track is prepared at time zero and remains paused until
-    /// the temporary track ends. The existing resume decision is preserved.
+    /// active, the new main track is prepared at time zero and waits until either
+    /// playback is requested or the temporary track ends.
     /// </summary>
-    public void SetMainMusic(AudioClip clip, bool loop = true)
+    public void SetMainMusic(AudioClip clip, bool loop = true, bool playImmediately = true)
     {
         if (clip == null || musicSource == null)
             return;
@@ -85,6 +87,7 @@ public sealed class AudioManager : MonoBehaviour
         musicSource.clip = clip;
         musicSource.loop = loop;
         musicSource.time = 0f;
+        mainMusicNeedsPlay = !playImmediately;
 
         if (isTemporaryMusicActive)
         {
@@ -92,9 +95,10 @@ public sealed class AudioManager : MonoBehaviour
             // source now needs a fresh Play() (rather than UnPause()) afterward.
             mainTrackChangedDuringTemporary = true;
         }
-        else
+        else if (playImmediately)
         {
             musicSource.Play();
+            mainMusicNeedsPlay = false;
         }
     }
 
@@ -146,7 +150,17 @@ public sealed class AudioManager : MonoBehaviour
     {
         // Avoid overlapping the main track with an active temporary track.
         if (!isTemporaryMusicActive && musicSource != null && musicSource.clip != null)
-            musicSource.UnPause();
+        {
+            if (mainMusicNeedsPlay)
+            {
+                musicSource.Play();
+                mainMusicNeedsPlay = false;
+            }
+            else
+            {
+                musicSource.UnPause();
+            }
+        }
     }
 
     public void StopMainMusic()
@@ -154,6 +168,7 @@ public sealed class AudioManager : MonoBehaviour
         if (musicSource != null)
             musicSource.Stop();
 
+        mainMusicNeedsPlay = false;
         shouldResumeMainMusicAfterTemporary = false;
     }
 
@@ -181,7 +196,10 @@ public sealed class AudioManager : MonoBehaviour
         if (resumeMainMusic && shouldResume && musicSource != null && musicSource.clip != null)
         {
             if (mainTrackChanged)
-                musicSource.Play(); // Start the newly selected main track from the beginning.
+            {
+                if (!mainMusicNeedsPlay)
+                    musicSource.Play(); // Start the newly selected main track from the beginning.
+            }
             else
                 musicSource.UnPause(); // Resume the original track at its previous position.
         }

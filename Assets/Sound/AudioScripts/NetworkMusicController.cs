@@ -50,6 +50,10 @@ public sealed class NetworkMusicController : NetworkBehaviour
         -1,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server);
+    private readonly NetworkVariable<bool> playbackStarted = new NetworkVariable<bool>(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
 
     private readonly List<int> validTrackIndices = new List<int>();
 
@@ -71,27 +75,28 @@ public sealed class NetworkMusicController : NetworkBehaviour
 
         // Subscribe before the server makes its initial selection.
         currentTrackIndex.OnValueChanged += HandleTrackIndexChanged;
+        playbackStarted.OnValueChanged += HandlePlaybackStartedChanged;
 
         // The current NetworkVariable value is already synchronized for clients
         // before OnNetworkSpawn is invoked, including late joiners.
         ApplyTrack(currentTrackIndex.Value);
 
-        // Only the server chooses the initial soundtrack for this scene.
-        if (IsServer && currentTrackIndex.Value < 0 && startOnSpawn)
+        // Select the initial soundtrack on the server even when playback is delayed.
+        if (IsServer && currentTrackIndex.Value < 0)
         {
-            StartMusic();
+            SelectNextTrackOnServer();
         }
-        
-        if (!startOnSpawn)
+
+        if (IsServer && startOnSpawn && currentTrackIndex.Value >= 0)
         {
-            // Stop any music that may have been playing from a previous scene.
-            AudioManager.Instance.StopMainMusic();
+            playbackStarted.Value = true;
         }
     }
 
     public override void OnNetworkDespawn()
     {
         currentTrackIndex.OnValueChanged -= HandleTrackIndexChanged;
+        playbackStarted.OnValueChanged -= HandlePlaybackStartedChanged;
         playbackPending = false;
     }
 
@@ -122,8 +127,8 @@ public sealed class NetworkMusicController : NetworkBehaviour
     }
 
     /// <summary>
-    /// Starts the first track if none is selected. Call on the server after any
-    /// desired silence at the start of a scene or minigame.
+    /// Starts playback of the selected track. Call on the server after any desired
+    /// silence at the start of a scene or minigame.
     /// </summary>
     public void StartMusic()
     {
@@ -133,10 +138,14 @@ public sealed class NetworkMusicController : NetworkBehaviour
             return;
         }
 
-        if (!IsServer || currentTrackIndex.Value >= 0)
+        if (!IsServer)
             return;
 
-        SelectNextTrackOnServer();
+        if (currentTrackIndex.Value < 0)
+            SelectNextTrackOnServer();
+
+        if (currentTrackIndex.Value >= 0)
+            playbackStarted.Value = true;
     }
 
     private void SelectNextTrackOnServer()
@@ -184,6 +193,12 @@ public sealed class NetworkMusicController : NetworkBehaviour
         ApplyTrack(newIndex);
     }
 
+    private void HandlePlaybackStartedChanged(bool previousValue, bool newValue)
+    {
+        if (newValue && AudioManager.Instance != null)
+            AudioManager.Instance.ResumeMainMusic();
+    }
+
     private void ApplyTrack(int index)
     {
         if (index < 0)
@@ -213,7 +228,7 @@ public sealed class NetworkMusicController : NetworkBehaviour
         }
 
         // This does not stop temporary music (e.g. pause-menu music).
-        AudioManager.Instance.SetMainMusic(clip, loopTracks);
+        AudioManager.Instance.SetMainMusic(clip, loopTracks, playbackStarted.Value);
 
         lastAppliedTrackIndex = index;
         playbackPending = false;

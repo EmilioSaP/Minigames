@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3622258523623665912}
   - component: {fileID: 7268219047284038365}
   - component: {fileID: 7746444730530509832}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Tophat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -121,7 +121,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7769707808994509726}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: GrabPosition2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -155,7 +155,7 @@ GameObject:
   - component: {fileID: 2155057103010044437}
   - component: {fileID: 526432937065697429}
   - component: {fileID: 5513021154738658352}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Hatbase (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -266,7 +266,7 @@ GameObject:
   - component: {fileID: 7465099195773583740}
   - component: {fileID: 6453472174211519892}
   - component: {fileID: 3633175942176636181}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Explode
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5160,7 +5160,7 @@ GameObject:
   - component: {fileID: 9080524587517070210}
   - component: {fileID: 8794745239428129049}
   - component: {fileID: 359574788048803739}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: Text (TMP)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5298,7 +5298,7 @@ GameObject:
   - component: {fileID: 8442065186116308903}
   - component: {fileID: 7564432660571818693}
   - component: {fileID: 634880660060008593}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5412,7 +5412,7 @@ GameObject:
   - component: {fileID: 9106731165358537520}
   - component: {fileID: 4012258347223735719}
   - component: {fileID: 5759701434427077310}
-  m_Layer: 5
+  m_Layer: 6
   m_Name: NameTagCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5527,7 +5527,7 @@ GameObject:
   - component: {fileID: 2396317510113390504}
   - component: {fileID: 8691876289851332237}
   - component: {fileID: 729984807502308755}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Tallhat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5658,8 +5658,7 @@ GameObject:
   - component: {fileID: 7326159436285709606}
   - component: {fileID: 1533273743961490021}
   - component: {fileID: 5109419610327606381}
-  - component: {fileID: 4911120144634471081}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6301,27 +6300,6 @@ MonoBehaviour:
   dashImpulse: 6
   cooldown: 1.5
   directionSource: {fileID: 4229826527391531855}
---- !u!65 &4911120144634471081
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3090838943776890950}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.0000002, y: 0.33646238, z: 1.0000002}
-  m_Center: {x: 0, y: -0.8317688, z: 0}
 --- !u!1 &3648695234511257301
 GameObject:
   m_ObjectHideFlags: 0
@@ -6333,7 +6311,7 @@ GameObject:
   - component: {fileID: 7385913954440679930}
   - component: {fileID: 6388382032551598282}
   - component: {fileID: 7859859933576367854}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sweat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11167,7 +11145,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2983377969464684837}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11198,7 +11176,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1150096450369542489}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: NameTag
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11230,7 +11208,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4445285169714207638}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PlayerVisual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11264,7 +11242,7 @@ GameObject:
   - component: {fileID: 4229826527391531855}
   - component: {fileID: 6918061636176631843}
   - component: {fileID: 214061204490749804}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PlayerCamera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -11393,7 +11371,7 @@ GameObject:
   - component: {fileID: 3675252533454560497}
   - component: {fileID: 3738348089636405266}
   - component: {fileID: 5928592163581614020}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Cap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11508,7 +11486,7 @@ GameObject:
   - component: {fileID: 7962859370356055019}
   - component: {fileID: 489874981966872321}
   - component: {fileID: 2162643426726416370}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Hatbase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11657,7 +11635,7 @@ GameObject:
   - component: {fileID: 4986230740902365858}
   - component: {fileID: 2813192164682510040}
   - component: {fileID: 3390882657301194628}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11786,7 +11764,7 @@ GameObject:
   - component: {fileID: 5776350653012326943}
   - component: {fileID: 5952358354160743072}
   - component: {fileID: 8139366017273182291}
-  m_Layer: 2
+  m_Layer: 6
   m_Name: InteractTrigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11914,7 +11892,7 @@ GameObject:
   - component: {fileID: 1711679114788440847}
   - component: {fileID: 3306087724329575754}
   - component: {fileID: 4811706062099998253}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: RunningParticleEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16764,7 +16742,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1901275208544911416}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: GrabPosition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16796,7 +16774,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2132065402115463308}
   - component: {fileID: 8297963897508841682}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: CameraPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16852,7 +16830,7 @@ GameObject:
   - component: {fileID: 7775048792617865326}
   - component: {fileID: 4400498442509315533}
   - component: {fileID: 2015724890823502378}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Roundhat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
