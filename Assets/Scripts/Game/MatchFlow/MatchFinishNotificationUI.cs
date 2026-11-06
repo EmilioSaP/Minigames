@@ -17,6 +17,9 @@ public class MatchFinishNotificationUI : MonoBehaviour
     [Header("Settings")]
     [SerializeField] private float displayDuration = 3f;
 
+    [SerializeField] private HighlightMyText WinHighlightText;
+    [SerializeField] private HighlightMyText OtherPlayerWinHighlightText;
+
     private Coroutine bindingCoroutine;
     private Coroutine hideCoroutine;
 
@@ -24,7 +27,7 @@ public class MatchFinishNotificationUI : MonoBehaviour
 
     private void Awake()
     {
-        HidePanels();
+        //HidePanels();
     }
 
     private void OnEnable()
@@ -91,11 +94,13 @@ public class MatchFinishNotificationUI : MonoBehaviour
 
         if (clientId == NetworkManager.Singleton.LocalClientId)
         {
-            ShowLocalFinished();
+            //ShowLocalFinished();
+            WinHighlightText.HighlightUIText();
         }
         else
         {
-            ShowOtherPlayerFinished(clientId);
+            //ShowOtherPlayerFinished(clientId);
+            OtherPlayerWinHighlightText.HighlightUIText();
         }
     }
 
