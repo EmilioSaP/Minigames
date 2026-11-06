@@ -40,6 +40,9 @@ public sealed class NetworkMusicController : NetworkBehaviour
     [SerializeField] private AudioClip[] playlist;
 
     [Header("Playback")]
+    [Tooltip("If disabled, the server must call StartMusic() to begin the first track.")]
+    [SerializeField] private bool startOnSpawn = false;
+
     [Tooltip("If enabled, selecting a new track starts it from the beginning and loops it.")]
     [SerializeField] private bool loopTracks = true;
 
@@ -74,8 +77,16 @@ public sealed class NetworkMusicController : NetworkBehaviour
         ApplyTrack(currentTrackIndex.Value);
 
         // Only the server chooses the initial soundtrack for this scene.
-        if (IsServer && currentTrackIndex.Value < 0)
-            SelectNextTrackOnServer();
+        if (IsServer && currentTrackIndex.Value < 0 && startOnSpawn)
+        {
+            StartMusic();
+        }
+        
+        if (!startOnSpawn)
+        {
+            // Stop any music that may have been playing from a previous scene.
+            AudioManager.Instance.StopMainMusic();
+        }
     }
 
     public override void OnNetworkDespawn()
@@ -105,6 +116,24 @@ public sealed class NetworkMusicController : NetworkBehaviour
         }
 
         if (!IsHost)
+            return;
+
+        SelectNextTrackOnServer();
+    }
+
+    /// <summary>
+    /// Starts the first track if none is selected. Call on the server after any
+    /// desired silence at the start of a scene or minigame.
+    /// </summary>
+    public void StartMusic()
+    {
+        if (!IsSpawned)
+        {
+            Debug.LogWarning("NetworkMusicController: Cannot start music before the NetworkObject is spawned.", this);
+            return;
+        }
+
+        if (!IsServer || currentTrackIndex.Value >= 0)
             return;
 
         SelectNextTrackOnServer();

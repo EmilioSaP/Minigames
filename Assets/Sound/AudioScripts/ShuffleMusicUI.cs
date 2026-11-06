@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ShuffleMusicUI : MonoBehaviour
 {
@@ -14,6 +15,16 @@ public class ShuffleMusicUI : MonoBehaviour
         else
         {
             Debug.LogWarning("ShuffleMusicUI: NetworkMusicController is not in the scene yet.");
+        }
+    }
+
+    public void EnableButton(bool enable)
+    {
+        // set button interactable state based on the enable parameter
+        var button = GetComponent<UnityEngine.UI.Button>();
+        if (button != null)
+        {
+            button.interactable = enable;
         }
     }
 }

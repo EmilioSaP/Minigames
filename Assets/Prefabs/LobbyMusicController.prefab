@@ -78,4 +78,5 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 9f46110d85559ac4b98070b5be20b426, type: 3}
   - {fileID: 8300000, guid: 1b27518363381064bba0543b50345086, type: 3}
   - {fileID: 8300000, guid: 4201762dd8c7374418fd9a122d607153, type: 3}
+  startOnSpawn: 1
   loopTracks: 1
