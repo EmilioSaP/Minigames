@@ -9,26 +9,20 @@ public class MatchFinishNotificationUI : MonoBehaviour
     [Header("References")]
     [SerializeField] private MatchResultsManager resultsManager;
 
-    [Header("UI")]
+    [Header("Win UI")]
     [SerializeField] private GameObject localFinishedPanel;
+    [SerializeField] private HighlightMyText WinHighlightText;
+    
+    [Header("Other won UI")]
     [SerializeField] private GameObject otherPlayerFinishedPanel;
+    [SerializeField] private HighlightMyText OtherPlayerWinHighlightText;
     [SerializeField] private TMP_Text otherPlayerFinishedText;
 
-    [Header("Settings")]
-    [SerializeField] private float displayDuration = 3f;
-
-    [SerializeField] private HighlightMyText WinHighlightText;
-    [SerializeField] private HighlightMyText OtherPlayerWinHighlightText;
 
     private Coroutine bindingCoroutine;
     private Coroutine hideCoroutine;
 
     private bool isSubscribed;
-
-    private void Awake()
-    {
-        //HidePanels();
-    }
 
     private void OnEnable()
     {
@@ -78,12 +72,13 @@ public class MatchFinishNotificationUI : MonoBehaviour
 
         if (resultsManager.HasCompleted(localClientId))
         {
-            ShowLocalFinished();
+            WinHighlightText.HighlightUIText();
         }
         else if (resultsManager.TryGetLastCompleted(out ulong lastFinisher) &&
                  lastFinisher != localClientId)
         {
-            ShowOtherPlayerFinished(lastFinisher);
+            SetOtherPlayerFinishedText(lastFinisher);
+            OtherPlayerWinHighlightText.HighlightUIText();
         }
     }
 
@@ -99,62 +94,43 @@ public class MatchFinishNotificationUI : MonoBehaviour
         }
         else
         {
-            //ShowOtherPlayerFinished(clientId);
+            SetOtherPlayerFinishedText(clientId);
             OtherPlayerWinHighlightText.HighlightUIText();
         }
     }
 
-    private void ShowLocalFinished()
-    {
-        ShowPanel(
-            localFinishedPanel,
-            otherPlayerFinishedPanel
-        );
-    }
 
-    private void ShowOtherPlayerFinished(ulong clientId)
+    private void SetOtherPlayerFinishedText(ulong clientId)
     {
         if (otherPlayerFinishedText != null)
         {
+            string playerName = "A player";
+
+            if (NetworkManager.Singleton != null &&
+                NetworkManager.Singleton.ConnectedClients.TryGetValue(
+                    clientId,
+                    out NetworkClient client
+                ) &&
+                client.PlayerObject != null &&
+                client.PlayerObject.TryGetComponent(
+                    out PlayerIdentity playerIdentity
+                ) &&
+                !string.IsNullOrWhiteSpace(
+                    playerIdentity.PlayerName.Value.ToString()
+                ))
+            {
+                playerName = playerIdentity.PlayerName.Value.ToString();
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"Could not resolve a player name for client {clientId}."
+                );
+            }
+
             otherPlayerFinishedText.text =
-                $"Player {clientId} has reached the end!";
+                $"{playerName} has reached the end!";
         }
-
-        ShowPanel(
-            otherPlayerFinishedPanel,
-            localFinishedPanel
-        );
     }
 
-    private void ShowPanel(GameObject panelToShow, GameObject panelToHide)
-    {
-        if (hideCoroutine != null)
-            StopCoroutine(hideCoroutine);
-
-        if (panelToHide != null)
-            panelToHide.SetActive(false);
-
-        if (panelToShow != null)
-            panelToShow.SetActive(true);
-
-        hideCoroutine = StartCoroutine(HideAfterDelay());
-    }
-
-    private IEnumerator HideAfterDelay()
-    {
-        yield return new WaitForSecondsRealtime(displayDuration);
-
-        HidePanels();
-
-        hideCoroutine = null;
-    }
-
-    private void HidePanels()
-    {
-        if (localFinishedPanel != null)
-            localFinishedPanel.SetActive(false);
-
-        if (otherPlayerFinishedPanel != null)
-            otherPlayerFinishedPanel.SetActive(false);
-    }
 }
