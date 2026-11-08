@@ -9,6 +9,8 @@ public enum PostMatchStage : byte
     None,
     FinishPresentation,
     AdditionalFinishWindow,
+    ResultsScreen,
+    RematchVote,
     Selection
 }
 
@@ -26,6 +28,11 @@ public class PostMatchFlowController : NetworkBehaviour
     [Header("Additional Finish Window")]
     [SerializeField] private bool waitForRemainingPlayers = true;
     [SerializeField] private float additionalFinishWindowDuration = 10f;
+
+    [Header("Results Screen")]
+    [SerializeField] private bool showResultsScreen = true;
+    [SerializeField] private float resultsScreenDuration = 10f;
+    
 
     // Synchronized post-match state.
     private readonly NetworkVariable<PostMatchStage> currentStage =
