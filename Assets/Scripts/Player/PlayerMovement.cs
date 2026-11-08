@@ -10,6 +10,10 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float walkSpeed = 5f;
     [SerializeField] private float sprintSpeed = 8f;
 
+    [Header("Spectator")]
+    [SerializeField, Min(0f)] private float spectatorSpeed = 12f;
+    [SerializeField, Min(0f)] private float spectatorVerticalSpeed = 8f;
+
     [Header("Ground Movement")]
     [SerializeField] private float groundAcceleration = 22f;
     [SerializeField] private float groundDeceleration = 25f;
@@ -65,6 +69,9 @@ public class PlayerMovement : NetworkBehaviour
 
     private bool movementEnabled = true;
     private bool motionFrozen;
+    private bool isSpectator;
+
+    public bool IsSpectator => isSpectator;
 
     private void Awake()
     {
@@ -120,6 +127,15 @@ public class PlayerMovement : NetworkBehaviour
             ResetMotion();
     }
 
+    public void SetSpectatorMode(bool enabled)
+    {
+        if (isSpectator == enabled)
+            return;
+
+        isSpectator = enabled;
+        ResetMotion();
+    }
+
     // --------------------------------------------------
     // MOVEMENT RESET
     // --------------------------------------------------
@@ -146,7 +162,7 @@ public class PlayerMovement : NetworkBehaviour
     // (metres per second), not a force in Newtons.
     public void AddHorizontalImpulse(Vector3 impulse)
     {
-        if (!IsOwner || motionFrozen)
+        if (!IsOwner || motionFrozen || isSpectator)
             return;
 
         impulse = Vector3.ProjectOnPlane(impulse, Vector3.up);
@@ -193,6 +209,12 @@ public class PlayerMovement : NetworkBehaviour
             sprintInput =
                 Keyboard.current.shiftKey.isPressed ||
                 Keyboard.current.qKey.isPressed;
+        }
+
+        if (isSpectator)
+        {
+            HandleSpectatorMovement(input, deltaTime);
+            return;
         }
 
         HandleJumpAndGravity(jumpHeld);
@@ -273,6 +295,48 @@ public class PlayerMovement : NetworkBehaviour
         {
             verticalVelocity = groundedGravity;
         }
+    }
+
+    private void HandleSpectatorMovement(Vector2 input, float deltaTime)
+    {
+        float verticalInput = 0f;
+
+        if (movementEnabled && Keyboard.current != null)
+        {
+            if (Keyboard.current.spaceKey.isPressed)
+                verticalInput += 1f;
+
+            if (Keyboard.current.eKey.isPressed)
+                verticalInput -= 1f;
+        }
+
+        Vector3 forward =
+            Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
+
+        Vector3 right =
+            Vector3.ProjectOnPlane(transform.right, Vector3.up).normalized;
+
+        Vector3 horizontalDirection =
+            right * input.x + forward * input.y;
+
+        if (horizontalDirection.sqrMagnitude > 1f)
+            horizontalDirection.Normalize();
+
+        Vector3 spectatorVelocity =
+            horizontalDirection * spectatorSpeed +
+            Vector3.up * verticalInput * spectatorVerticalSpeed;
+
+        characterController.Move(
+            spectatorVelocity * deltaTime
+        );
+
+        IsMoving = false;
+        IsSprinting = false;
+        IsJumping = false;
+        isAirborne = false;
+        horizontalVelocity = Vector3.zero;
+        externalVelocity = Vector3.zero;
+        verticalVelocity = 0f;
     }
 
     private void HandleJumpAndGravity(bool jumpHeld)

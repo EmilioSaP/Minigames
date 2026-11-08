@@ -5834,6 +5834,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   walkSpeed: 5
   sprintSpeed: 8
+  spectatorSpeed: 12
+  spectatorVerticalSpeed: 8
   groundAcceleration: 70
   groundDeceleration: 60
   airAcceleration: 60

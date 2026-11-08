@@ -1,16 +1,28 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class DeathBehavior : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [SerializeField] private bool spectateOnDeath;
+    [SerializeField] private bool returnToNormalOnRespawn = true;
 
-    // Update is called once per frame
-    void Update()
+    public bool SpectateOnDeath => spectateOnDeath;
+    public bool ReturnToNormalOnRespawn => returnToNormalOnRespawn;
+
+    public static DeathBehavior FindForScene(Scene scene)
     {
-        
+        if (!scene.IsValid() || !scene.isLoaded)
+            return null;
+
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            DeathBehavior behavior =
+                root.GetComponentInChildren<DeathBehavior>(true);
+
+            if (behavior != null && behavior.isActiveAndEnabled)
+                return behavior;
+        }
+
+        return null;
     }
 }

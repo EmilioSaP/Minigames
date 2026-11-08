@@ -29,7 +29,8 @@ public class PlayerDash : NetworkBehaviour
         if (!IsOwner || Keyboard.current == null)
             return;
 
-        if (!playerMovement.CanReceiveMovementInput)
+        if (!playerMovement.CanReceiveMovementInput ||
+            playerMovement.IsSpectator)
             return;
 
         if (!Keyboard.current.eKey.wasPressedThisFrame)

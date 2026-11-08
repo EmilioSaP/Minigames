@@ -55,6 +55,7 @@ public class PlayerLifePresentation : NetworkBehaviour
         }
 
         ReleaseDeathRestriction();
+        playerMovement?.SetSpectatorMode(false);
         playerMovement?.SetMotionFrozen(false);
 
         base.OnNetworkDespawn();
@@ -62,7 +63,7 @@ public class PlayerLifePresentation : NetworkBehaviour
 
     private void OnDeathStateChanged(bool previous, bool current)
     {
-        ApplyDeadState(current, current);
+        ApplyDeadState(current, current, previous && !current);
     }
 
     private void OnActiveSceneChanged(Scene previousScene, Scene newScene)
@@ -71,10 +72,14 @@ public class PlayerLifePresentation : NetworkBehaviour
             return;
 
         ReleaseDeathRestriction();
+        playerMovement?.SetSpectatorMode(false);
         playerMovement?.SetMotionFrozen(false);
     }
 
-    private void ApplyDeadState(bool isDead, bool playEffect)
+    private void ApplyDeadState(
+        bool isDead,
+        bool playEffect,
+        bool isRespawning = false)
     {
         // Visual presentation happens on every observing client.
         if (isDead)
@@ -100,29 +105,46 @@ public class PlayerLifePresentation : NetworkBehaviour
             deathBurst.Play(true);
         }
 
-        // Only the owning player needs their local controls restricted.
-        if (!IsOwner || disablePlayer == null)
+        // Only the owning player needs their local movement state changed.
+        if (!IsOwner)
             return;
 
-        // Stop all momentum and gravity when dead.
-        if (playerMovement != null)
-            playerMovement.SetMotionFrozen(isDead);
-
-        if (disablePlayer == null)
-            return;
+        DeathBehavior behavior = DeathBehavior.FindForScene(gameObject.scene);
 
         if (isDead)
         {
-            if (deathRestrictionHandle == 0)
+            bool spectate = behavior != null && behavior.SpectateOnDeath;
+
+            if (playerMovement != null)
             {
-                deathRestrictionHandle =
-                    disablePlayer.AddRestriction(PlayerControlChannels.All);
+                playerMovement.SetSpectatorMode(spectate);
+                playerMovement.SetMotionFrozen(!spectate);
             }
+
+            if (disablePlayer != null)
+            {
+                ReleaseDeathRestriction();
+                deathRestrictionHandle =
+                    disablePlayer.AddRestriction(
+                        spectate
+                            ? PlayerControlChannels.Interaction
+                            : PlayerControlChannels.All
+                    );
+            }
+
+            return;
         }
-        else
-        {
-            ReleaseDeathRestriction();
-        }
+
+        bool returnToNormal =
+            !isRespawning ||
+            behavior == null ||
+            behavior.ReturnToNormalOnRespawn;
+
+        if (returnToNormal)
+            playerMovement?.SetSpectatorMode(false);
+
+        playerMovement?.SetMotionFrozen(false);
+        ReleaseDeathRestriction();
     }
 
     private void ReleaseDeathRestriction()
