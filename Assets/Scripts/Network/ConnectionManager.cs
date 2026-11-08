@@ -25,6 +25,8 @@ public class ConnectionManager : MonoBehaviour
     [SerializeField] private TMP_InputField usernameInput;
     [SerializeField] private GameObject StartGameButton;
     [SerializeField] private GameObject offlineMenuRoot;
+    [SerializeField] private GameObject offlineMenuCanvas;
+    [SerializeField] private GameObject offlinePlayCanvas;
 
     [Header("Relay")]
     [SerializeField] private int maxConnections = 4;
@@ -220,6 +222,7 @@ public class ConnectionManager : MonoBehaviour
                 statusText.text = "Hosting game!";
                 //enable the gamobject containing the joinCodeTextField so that the player can copy the join code
                 joinCodeTextField.text = joinCode; // Set the input field to the join code for easy copying
+                offlinePlayCanvas.SetActive(false); // Hide the offline play canvas when hosting
                 ApplyLobbyPresentation();
 
                 Debug.Log($"HOST STARTED");
@@ -284,6 +287,7 @@ public class ConnectionManager : MonoBehaviour
                 Debug.Log($"Join Code: {joinCode}");
                 currentJoinCode = joinCode;
                 joinCodeTextField.text = joinCode;
+                offlinePlayCanvas.SetActive(false); // Hide the offline play canvas when joining
                 ApplyLobbyPresentation();
             }
             else
@@ -324,6 +328,9 @@ public class ConnectionManager : MonoBehaviour
 
         if (offlineMenuRoot != null)
             offlineMenuRoot.SetActive(!isConnectedParty);
+
+        if (offlineMenuCanvas != null)
+            offlineMenuCanvas.SetActive(!isConnectedParty);
 
         if (StartGameButton != null)
             StartGameButton.SetActive(
