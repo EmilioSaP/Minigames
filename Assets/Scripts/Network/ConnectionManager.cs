@@ -11,6 +11,10 @@ using Unity.Services.Authentication;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 
+/// <summary>
+/// Manages lobby connection and Relay session setup, saving the entered
+/// player name before connecting.
+/// </summary>
 public class ConnectionManager : MonoBehaviour
 {
     [Header("UI")]
@@ -35,6 +39,13 @@ public class ConnectionManager : MonoBehaviour
 
     private void Start()
     {
+        string savedPlayerName = PlayerSettings.PlayerName;
+        if (usernameInput != null &&
+            !string.IsNullOrWhiteSpace(savedPlayerName))
+        {
+            usernameInput.text = savedPlayerName;
+        }
+
         ApplyLobbyPresentation();
 
         NetworkManager networkManager = NetworkManager.Singleton;
@@ -298,6 +309,12 @@ public class ConnectionManager : MonoBehaviour
             return $"Player {UnityEngine.Random.Range(1000, 9999)}";
 
         return playerName;
+    }
+
+    public void PlayerNameEdited()
+    {
+        //Just set the playerpref
+        PlayerSettings.PlayerName = GetPlayerName();
     }
 
     private void ApplyLobbyPresentation()

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using UnityEngine;
-// Singleton that contains the player preferences for the world scene. This is used to store the player's username and color, so that it can be accessed by other scripts in the world scene.
+// unused Singleton that contains the player preferences for the world scene. This is used to store the player's username and color, so that it can be accessed by other scripts in the world scene.
 public class WorldPlayerPrefInfo : MonoBehaviour
 {
     public static WorldPlayerPrefInfo Instance { get; private set; }
@@ -18,12 +18,6 @@ public class WorldPlayerPrefInfo : MonoBehaviour
 
     private void Start()
     {
-        // If the player has not set a username, set it to "Player"
-        if (!PlayerPrefs.HasKey("Username"))
-        {
-            PlayerPrefs.SetString("Username", "Player");
-        }
-
         // If the player has not set a color, set it to white
         if (!PlayerPrefs.HasKey("Color"))
         {
