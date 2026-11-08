@@ -1,6 +1,7 @@
 
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerLifePresentation : NetworkBehaviour
 {
@@ -14,6 +15,16 @@ public class PlayerLifePresentation : NetworkBehaviour
     private DisablePlayer disablePlayer;
 
     private int deathRestrictionHandle;
+
+    private void OnEnable()
+    {
+        SceneManager.activeSceneChanged += OnActiveSceneChanged;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+    }
 
     public override void OnNetworkSpawn()
     {
@@ -44,6 +55,7 @@ public class PlayerLifePresentation : NetworkBehaviour
         }
 
         ReleaseDeathRestriction();
+        playerMovement?.SetMotionFrozen(false);
 
         base.OnNetworkDespawn();
     }
@@ -51,6 +63,15 @@ public class PlayerLifePresentation : NetworkBehaviour
     private void OnDeathStateChanged(bool previous, bool current)
     {
         ApplyDeadState(current, current);
+    }
+
+    private void OnActiveSceneChanged(Scene previousScene, Scene newScene)
+    {
+        if (!IsOwner)
+            return;
+
+        ReleaseDeathRestriction();
+        playerMovement?.SetMotionFrozen(false);
     }
 
     private void ApplyDeadState(bool isDead, bool playEffect)

@@ -1,5 +1,5 @@
 using UnityEngine;
-
+//unused for now
 public static class PlayerSettings
 {
     public static string PlayerName
