@@ -39,7 +39,7 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
     }
 
     [Header("References")]
-    [SerializeField] private CanvasGroup resultsGroup;
+    [SerializeField] private FadeCanvasGroupScript faderesultsGroup;
 
     [SerializeField] private RectTransform resultsListRoot;
 
@@ -66,7 +66,7 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
 
     private void Awake()
     {
-        SetCanvasVisible(false);
+        //SetCanvasVisible(false);
 
         if (resultsLayout == null && resultsListRoot != null)
         {
@@ -173,12 +173,17 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
 
     private void SetCanvasVisible(bool visible)
     {
-        if (resultsGroup == null)
+        if (faderesultsGroup == null)
             return;
 
-        resultsGroup.alpha = visible ? 1f : 0f;
-        resultsGroup.interactable = visible;
-        resultsGroup.blocksRaycasts = visible;
+        if (visible)
+        {
+            faderesultsGroup.FadeIn();
+        }
+        else
+        {
+            faderesultsGroup.FadeOut();
+        }
     }
 
     // ------------------------------------
