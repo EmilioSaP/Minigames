@@ -84,11 +84,16 @@ public class PlayerLifePresentation : NetworkBehaviour
         // Visual presentation happens on every observing client.
         if (isDead)
         {
-            networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Explode);
+            if (playEffect)
+                networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Explode);
         }
         else
         {
-            networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Spawn);
+            networkPlayerAudio.PlayFromOwner(
+                isRespawning
+                    ? PlayerSoundEvent.Respawn
+                    : PlayerSoundEvent.Spawn
+            );
         }
 
         if (playerVisuals != null)
@@ -145,6 +150,48 @@ public class PlayerLifePresentation : NetworkBehaviour
 
         playerMovement?.SetMotionFrozen(false);
         ReleaseDeathRestriction();
+    }
+
+    public void SpectateOnFinishServer()
+    {
+        if (!IsServer || !IsSpawned)
+            return;
+
+        playerHealth?.SetInvulnerableServer(true);
+        SpectateOnFinishRpc();
+    }
+
+    [Rpc(SendTo.Owner)]
+    private void SpectateOnFinishRpc()
+    {
+        SpectateWithoutDying();
+    }
+
+    public void SpectateOnResultsScreen()
+    {
+        SpectateWithoutDying();
+    }
+
+    private void SpectateWithoutDying()
+    {
+        if (!IsOwner ||
+            playerMovement == null ||
+            playerMovement.IsSpectator)
+        {
+            return;
+        }
+
+        playerMovement.SetSpectatorMode(true);
+        playerMovement.SetMotionFrozen(false);
+
+        ReleaseDeathRestriction();
+        if (disablePlayer != null)
+        {
+            deathRestrictionHandle =
+                disablePlayer.AddRestriction(
+                    PlayerControlChannels.Interaction
+                );
+        }
     }
 
     private void ReleaseDeathRestriction()

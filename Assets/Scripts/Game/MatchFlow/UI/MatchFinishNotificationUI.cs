@@ -18,6 +18,10 @@ public class MatchFinishNotificationUI : MonoBehaviour
     [SerializeField] private HighlightMyText OtherPlayerWinHighlightText;
     [SerializeField] private TMP_Text otherPlayerFinishedText;
 
+    [Header("Concede UI")]
+    [SerializeField] private GameObject localConcedePanel;
+    [SerializeField] private HighlightMyText ConcedeHighlightText;
+
 
     private Coroutine bindingCoroutine;
     private Coroutine hideCoroutine;
@@ -40,6 +44,7 @@ public class MatchFinishNotificationUI : MonoBehaviour
         if (isSubscribed && resultsManager != null)
         {
             resultsManager.PlayerCompleted -= OnPlayerCompleted;
+            resultsManager.PlayerConceded -= OnPlayerConceded;
         }
 
         isSubscribed = false;
@@ -65,6 +70,7 @@ public class MatchFinishNotificationUI : MonoBehaviour
         }
 
         resultsManager.PlayerCompleted += OnPlayerCompleted;
+        resultsManager.PlayerConceded += OnPlayerConceded;
         isSubscribed = true;
 
         // Handle a completion that occurred before subscription.
@@ -96,6 +102,18 @@ public class MatchFinishNotificationUI : MonoBehaviour
         {
             SetOtherPlayerFinishedText(clientId);
             OtherPlayerWinHighlightText.HighlightUIText();
+        }
+    }
+
+    private void OnPlayerConceded(ulong clientId)
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            //ShowLocalFinished();
+            ConcedeHighlightText.HighlightUIText();
         }
     }
 

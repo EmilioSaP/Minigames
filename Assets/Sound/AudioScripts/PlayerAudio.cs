@@ -19,6 +19,7 @@ public sealed class PlayerAudio : MonoBehaviour
     [SerializeField] private AudioClip[] hurtClips;
     [SerializeField] private AudioClip explodeClip;
     [SerializeField] private AudioClip spawnClip;
+    [SerializeField] private AudioClip respawnClip;
 
     private void Awake()
     {
@@ -52,6 +53,7 @@ public sealed class PlayerAudio : MonoBehaviour
     public void PlayHurt(float volumeScale = 1f) => Play(PlayerSoundEvent.Hurt, volumeScale);
     public void PlayExplode(float volumeScale = 1f) => Play(PlayerSoundEvent.Explode, volumeScale);
     public void PlaySpawn(float volumeScale = 1f) => Play(PlayerSoundEvent.Spawn, volumeScale);
+    public void PlayRespawn(float volumeScale = 1f) => Play(PlayerSoundEvent.Respawn, volumeScale);
     private AudioClip GetClip(PlayerSoundEvent soundEvent)
     {
         switch (soundEvent)
@@ -64,6 +66,7 @@ public sealed class PlayerAudio : MonoBehaviour
             case PlayerSoundEvent.Hurt: return hurtClips.Length > 0 ? hurtClips[Random.Range(0, hurtClips.Length)] : null;
             case PlayerSoundEvent.Explode: return explodeClip;
             case PlayerSoundEvent.Spawn: return spawnClip;
+            case PlayerSoundEvent.Respawn: return respawnClip;
             default: return null;
         }
     }
@@ -83,4 +86,5 @@ public enum PlayerSoundEvent : byte
     Hurt = 5,
     Explode = 6,
     Spawn = 7,
+    Respawn = 8
 }

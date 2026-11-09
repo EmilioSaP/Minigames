@@ -303,7 +303,7 @@ public class PlayerMovement : NetworkBehaviour
 
         if (movementEnabled && Keyboard.current != null)
         {
-            if (Keyboard.current.spaceKey.isPressed)
+            if (Keyboard.current.spaceKey.isPressed || Keyboard.current.qKey.isPressed)
                 verticalInput += 1f;
 
             if (Keyboard.current.eKey.isPressed)

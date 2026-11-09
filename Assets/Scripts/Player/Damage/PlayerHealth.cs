@@ -1,6 +1,7 @@
 using System;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerHealth : NetworkBehaviour, IDamageable
 {
@@ -21,6 +22,13 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
             NetworkVariableWritePermission.Server
         );
 
+    public NetworkVariable<bool> IsInvulnerable =
+        new NetworkVariable<bool>(
+            false,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server
+        );
+
     // Server-side event. RespawnManager will subscribe to this later.
     public event Action<DamageInfo> ServerDied;
 
@@ -29,18 +37,32 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+        SceneManager.activeSceneChanged += OnActiveSceneChanged;
 
         if (IsServer)
         {
             CurrentHealth.Value = maxHealth;
             IsDead.Value = false;
+            IsInvulnerable.Value = false;
         }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+        base.OnNetworkDespawn();
+    }
+
+    private void OnActiveSceneChanged(Scene previousScene, Scene newScene)
+    {
+        if (IsServer && IsSpawned)
+            IsInvulnerable.Value = false;
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
     {
         // Only the server can modify health.
-        if (!IsServer || !IsSpawned || !IsAlive)
+        if (!IsServer || !IsSpawned || !IsAlive || IsInvulnerable.Value)
             return;
 
         if (damageInfo.Amount <= 0f)
@@ -71,6 +93,10 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
 
         Debug.Log($"Player {OwnerClientId} died.");
 
+        DeathBehavior behavior = DeathBehavior.FindForScene(gameObject.scene);
+        IsInvulnerable.Value =
+            behavior != null && behavior.SpectateOnDeath;
+
         ServerDied?.Invoke(damageInfo);
     }
 
@@ -82,6 +108,18 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
 
         CurrentHealth.Value = maxHealth;
         IsDead.Value = false;
+
+        DeathBehavior behavior = DeathBehavior.FindForScene(gameObject.scene);
+        if (behavior == null || behavior.ReturnToNormalOnRespawn)
+            IsInvulnerable.Value = false;
+    }
+
+    public void SetInvulnerableServer(bool invulnerable)
+    {
+        if (!IsServer || !IsSpawned)
+            return;
+
+        IsInvulnerable.Value = invulnerable;
     }
 
     public void KillServer(ulong sourceClientId = ulong.MaxValue)

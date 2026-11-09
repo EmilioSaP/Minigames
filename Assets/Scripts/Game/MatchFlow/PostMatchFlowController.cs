@@ -34,6 +34,7 @@ public class PostMatchFlowController : NetworkBehaviour
 
     [Header("Results Screen")]
     [SerializeField] private bool showResultsScreen = true;
+    [SerializeField] private bool spectateOnResultsScreen = true;
     [SerializeField] private float resultsScreenDuration = 10f;
     
 
@@ -106,6 +107,9 @@ public class PostMatchFlowController : NetworkBehaviour
 
         currentStage.OnValueChanged += OnStageChanged;
         BindResultsUI();
+
+        if (CurrentStage == PostMatchStage.ResultsScreen)
+            SpectateLocalPlayerOnResultsScreen();
 
         // Only the server coordinates the post-match sequence.
         if (IsServer)
@@ -207,9 +211,9 @@ public class PostMatchFlowController : NetworkBehaviour
             }
         }
 
-        resultsScreenUI?.SetResultsVisible(
+        /*resultsScreenUI?.SetResultsVisible(
             CurrentStage == PostMatchStage.ResultsScreen
-        );
+        ); //starts with 0 alpha, uneccessary*/
     }
 
     // -------------------------
@@ -456,6 +460,16 @@ public class PostMatchFlowController : NetworkBehaviour
         Debug.Log($"Post-match stage changed: {previousStage} -> {newStage}");
         StageChanged?.Invoke(newStage);
 
+        if (IsServer &&
+            newStage == PostMatchStage.ResultsScreen &&
+            spectateOnResultsScreen)
+        {
+            SetConnectedPlayersInvulnerable();
+        }
+
+        if (newStage == PostMatchStage.ResultsScreen)
+            SpectateLocalPlayerOnResultsScreen();
+
         bool isResultsScreenVisible =
             newStage == PostMatchStage.ResultsScreen;
 
@@ -473,4 +487,57 @@ public class PostMatchFlowController : NetworkBehaviour
     }
 
     public event System.Action<bool> ResultsScreenVisibilityChanged;
+
+    private void SetConnectedPlayersInvulnerable()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        foreach (NetworkClient client in
+                 NetworkManager.Singleton.ConnectedClientsList)
+        {
+            PlayerHealth health =
+                client.PlayerObject != null
+                    ? client.PlayerObject.GetComponent<PlayerHealth>()
+                    : null;
+
+            if (health == null)
+            {
+                Debug.LogError(
+                    $"Player {client.ClientId} has no PlayerHealth component.",
+                    this
+                );
+                continue;
+            }
+
+            health.SetInvulnerableServer(true);
+        }
+    }
+
+    private void SpectateLocalPlayerOnResultsScreen()
+    {
+        if (!spectateOnResultsScreen || NetworkManager.Singleton == null)
+            return;
+
+        NetworkObject localPlayerObject =
+            NetworkManager.Singleton.LocalClient?.PlayerObject;
+
+        if (localPlayerObject == null)
+            return;
+
+        PlayerLifePresentation lifePresentation =
+            localPlayerObject.GetComponent<PlayerLifePresentation>();
+
+        if (lifePresentation == null)
+        {
+            Debug.LogError(
+                "PostMatchFlowController requires PlayerLifePresentation " +
+                "when spectateOnResultsScreen is enabled.",
+                this
+            );
+            return;
+        }
+
+        lifePresentation.SpectateOnResultsScreen();
+    }
 }

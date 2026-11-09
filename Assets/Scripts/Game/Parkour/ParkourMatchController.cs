@@ -10,6 +10,9 @@ public class ParkourMatchController : NetworkBehaviour
     [SerializeField] private MatchResultsManager resultsManager;
     [SerializeField] private PostMatchFlowController postMatchFlow;
 
+    [Header("Finish")]
+    [SerializeField] private bool spectateOnFinish;
+
     public bool RegisterGoalReachedServer(NetworkObject playerObject)
     {
         if (!IsServer || !IsSpawned)
@@ -54,6 +57,7 @@ public class ParkourMatchController : NetworkBehaviour
             }
 
             Debug.Log($"Parkour winner: Client {clientId}");
+            SpectatePlayerOnFinish(playerObject);
 
             return true;
         }
@@ -68,11 +72,33 @@ public class ParkourMatchController : NetworkBehaviour
             if (registered)
             {
                 Debug.Log($"Additional parkour finisher: Client {clientId}");
+                SpectatePlayerOnFinish(playerObject);
             }
 
             return registered;
         }
 
         return false;
+    }
+
+    private void SpectatePlayerOnFinish(NetworkObject playerObject)
+    {
+        if (!spectateOnFinish)
+            return;
+
+        PlayerLifePresentation lifePresentation =
+            playerObject.GetComponent<PlayerLifePresentation>();
+
+        if (lifePresentation == null)
+        {
+            Debug.LogError(
+                "ParkourMatchController requires PlayerLifePresentation " +
+                "when spectateOnFinish is enabled.",
+                this
+            );
+            return;
+        }
+
+        lifePresentation.SpectateOnFinishServer();
     }
 }
