@@ -8410,7 +8410,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1066515161
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9843,6 +9843,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1307408548}
   - component: {fileID: 1307408547}
+  - component: {fileID: 1841120391}
+  - component: {fileID: 1841120392}
   m_Layer: 0
   m_Name: NetworkSceneController
   m_TagString: Untagged
@@ -9862,8 +9864,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f68db55dd57ba640b522928f7c0d9e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkSceneController
-  gameplaySceneName: GameScene
   lobbySceneName: LobbyScene
+  nextMatchController: {fileID: 1841120392}
 --- !u!4 &1307408548
 Transform:
   m_ObjectHideFlags: 0
@@ -13389,6 +13391,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1840571478}
   m_CullTransparentMesh: 1
+--- !u!114 &1841120391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307408546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 242932139
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &1841120392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1307408546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a51840bfc6084873a2ffa3f902d56de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NextMatchController
+  ShowTopMostFoldoutHeaderGroup: 1
+  nextGameVoteDuration: 40
+  oneVoterLeftDuration: 10
+  minigameCatalog: {fileID: 11400000, guid: 371a0656e3a34bb3b0eb3f088834c49c, type: 2}
+  networkSceneController: {fileID: 1307408547}
 --- !u!1 &1896968621
 GameObject:
   m_ObjectHideFlags: 0

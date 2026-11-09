@@ -1,6 +1,6 @@
 using TMPro;
 using UnityEngine;
-
+//General counting up or down animator. Controls the text and the animator. It also plays the audio clips for each number. Manually fades the text in and out. The animator is responsible for the fade out.
 public class CountNumberAnimator : MonoBehaviour
 {
     [Header("References")]

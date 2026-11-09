@@ -21,6 +21,9 @@ public class PostMatchFlowController : NetworkBehaviour
     [SerializeField] private MatchFlowManager matchFlow;
     [SerializeField] private MatchResultsManager resultsManager;
     [SerializeField] private MatchPlayerTracker playerTracker;
+    [SerializeField] private RematchController rematchController;
+    [SerializeField] private NextMatchController nextMatchController;
+    [SerializeField] private MonoBehaviour resultsScreenUIComponent;
 
     [Header("Finish Presentation")]
     [SerializeField] private float finishPresentationDuration = 2.5f;
@@ -63,6 +66,7 @@ public class PostMatchFlowController : NetworkBehaviour
 
     private Coroutine bindingCoroutine;
     private Coroutine postMatchCoroutine;
+    private IMatchResultsUI resultsScreenUI;
 
     public event System.Action<PostMatchStage> StageChanged;
     public event System.Action SelectionPhaseStarted;
@@ -101,6 +105,7 @@ public class PostMatchFlowController : NetworkBehaviour
         base.OnNetworkSpawn();
 
         currentStage.OnValueChanged += OnStageChanged;
+        BindResultsUI();
 
         // Only the server coordinates the post-match sequence.
         if (IsServer)
@@ -122,6 +127,9 @@ public class PostMatchFlowController : NetworkBehaviour
         if (matchFlow != null)
             matchFlow.PhaseChanged -= OnMatchPhaseChanged;
 
+        if (rematchController != null)
+            rematchController.VoteCompleted -= OnRematchVoteCompleted;
+
         base.OnNetworkDespawn();
     }
 
@@ -142,11 +150,21 @@ public class PostMatchFlowController : NetworkBehaviour
             if (playerTracker == null)
                 playerTracker = FindFirstObjectByType<MatchPlayerTracker>();
 
+            if (rematchController == null)
+                rematchController = FindFirstObjectByType<RematchController>();
+
+            if (nextMatchController == null)
+                nextMatchController = FindFirstObjectByType<NextMatchController>();
+
             if (matchFlow != null &&
                 matchFlow.IsSpawned &&
                 resultsManager != null &&
                 resultsManager.IsSpawned &&
-                playerTracker != null)
+                playerTracker != null &&
+                rematchController != null &&
+                rematchController.IsSpawned &&
+                nextMatchController != null &&
+                nextMatchController.IsSpawned)
             {
                 break;
             }
@@ -155,11 +173,43 @@ public class PostMatchFlowController : NetworkBehaviour
         }
 
         matchFlow.PhaseChanged += OnMatchPhaseChanged;
+        rematchController.VoteCompleted += OnRematchVoteCompleted;
 
         // Handle the current state in case we subscribed late.
         OnMatchPhaseChanged(matchFlow.CurrentPhase);
 
         bindingCoroutine = null;
+    }
+
+    private void BindResultsUI()
+    {
+        if (resultsScreenUIComponent == null)
+        {
+            foreach (MonoBehaviour behaviour in
+                     FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+            {
+                if (behaviour is IMatchResultsUI)
+                {
+                    resultsScreenUIComponent = behaviour;
+                    break;
+                }
+            }
+        }
+
+        if (resultsScreenUIComponent != null)
+        {
+            resultsScreenUI = resultsScreenUIComponent as IMatchResultsUI;
+            if (resultsScreenUI == null)
+            {
+                Debug.LogError(
+                    $"{resultsScreenUIComponent.name} does not implement IMatchResultsUI."
+                );
+            }
+        }
+
+        resultsScreenUI?.SetResultsVisible(
+            CurrentStage == PostMatchStage.ResultsScreen
+        );
     }
 
     // -------------------------
@@ -267,11 +317,51 @@ public class PostMatchFlowController : NetworkBehaviour
         // No additional finishers can be registered after this point.
         acceptingAdditionalFinishers.Value = false;
 
-        currentStage.Value = PostMatchStage.Selection;
+        if (showResultsScreen)
+        {
+            currentStage.Value = PostMatchStage.ResultsScreen;
+            Debug.Log("Post-match results screen started.");
 
-        Debug.Log("Post-match selection phase started.");
+            double resultsEnd =
+                GetServerTime() + Mathf.Max(0f, resultsScreenDuration);
+
+            while (GetServerTime() < resultsEnd)
+            {
+                yield return null;
+            }
+        }
+
+        currentStage.Value = PostMatchStage.RematchVote;
+        Debug.Log("Rematch vote started.");
+        rematchController.BeginVoteServer();
+
+        while (!rematchController.IsVoteComplete)
+        {
+            yield return null;
+        }
+
+        StartNextMatch(rematchController.WasRematchUnanimous);
 
         postMatchCoroutine = null;
+    }
+
+    private void StartNextMatch(bool rematchApproved)
+    {
+        currentStage.Value = PostMatchStage.Selection;
+        Debug.Log("Post-match selection phase started.");
+        nextMatchController.BeginSelectionServer(rematchApproved);
+    }
+
+    private void OnRematchVoteCompleted(bool rematchApproved)
+    {
+        if (!IsServer || CurrentStage != PostMatchStage.RematchVote)
+            return;
+
+        Debug.Log(
+            rematchApproved
+                ? "All connected players voted to rematch."
+                : "Rematch vote did not reach unanimous agreement."
+        );
     }
 
     private bool HasUnresolvedConnectedParticipants()
@@ -314,7 +404,7 @@ public class PostMatchFlowController : NetworkBehaviour
         RequestConcedeRpc();
     }
 
-    [Rpc(SendTo.Server, RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     private void RequestConcedeRpc(RpcParams rpcParams = default)
     {
         if (!IsServer ||
@@ -347,11 +437,24 @@ public class PostMatchFlowController : NetworkBehaviour
         PostMatchStage previousStage,
         PostMatchStage newStage)
     {
+        Debug.Log($"Post-match stage changed: {previousStage} -> {newStage}");
         StageChanged?.Invoke(newStage);
+
+        bool isResultsScreenVisible =
+            newStage == PostMatchStage.ResultsScreen;
+
+        if (previousStage == PostMatchStage.ResultsScreen ||
+            isResultsScreenVisible)
+        {
+            resultsScreenUI?.SetResultsVisible(isResultsScreenVisible);
+            ResultsScreenVisibilityChanged?.Invoke(isResultsScreenVisible);
+        }
 
         if (newStage == PostMatchStage.Selection)
         {
             SelectionPhaseStarted?.Invoke();
         }
     }
+
+    public event System.Action<bool> ResultsScreenVisibilityChanged;
 }

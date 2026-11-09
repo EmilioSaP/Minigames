@@ -6,8 +6,8 @@ using UnityEngine.SceneManagement;
 public class NetworkSceneController : MonoBehaviour
 {
     [Header("Scene Settings")]
-    [SerializeField] private string gameplaySceneName = "GameScene";
     [SerializeField] private string lobbySceneName = "LobbyScene";
+    [SerializeField] private NextMatchController nextMatchController;
 
     private bool isLoadingScene;
 
@@ -34,7 +34,18 @@ public class NetworkSceneController : MonoBehaviour
             return;
         }
 
-        LoadPartyScene(networkManager, gameplaySceneName);
+        if (nextMatchController == null)
+            nextMatchController = FindFirstObjectByType<NextMatchController>();
+
+        if (nextMatchController == null)
+        {
+            Debug.LogError(
+                "Cannot start game selection: NextMatchController was not found."
+            );
+            return;
+        }
+
+        nextMatchController.BeginSelectionServer(false);
     }
 
     public void ReturnPartyToLobby()
@@ -56,19 +67,42 @@ public class NetworkSceneController : MonoBehaviour
         LoadPartyScene(networkManager, lobbySceneName);
     }
 
-    private void LoadPartyScene(
-        NetworkManager networkManager,
-        string sceneName)
+    public bool LoadPartyScene(string sceneName)
+    {
+        NetworkManager networkManager = NetworkManager.Singleton;
+
+        if (networkManager == null || !networkManager.IsListening)
+        {
+            Debug.LogWarning($"Cannot load {sceneName}: no active network session.");
+            return false;
+        }
+
+        if (!networkManager.IsHost)
+        {
+            Debug.LogWarning($"Only the host can load {sceneName} for the party.");
+            return false;
+        }
+
+        return LoadPartyScene(networkManager, sceneName);
+    }
+
+    private bool LoadPartyScene(NetworkManager networkManager, string sceneName)
     {
         if (isLoadingScene)
-            return;
+            return false;
+
+        if (string.IsNullOrWhiteSpace(sceneName))
+        {
+            Debug.LogError("Cannot load a scene with an empty name.");
+            return false;
+        }
 
         if (!networkManager.NetworkConfig.EnableSceneManagement)
         {
             Debug.LogError(
                 $"Cannot load {sceneName}: NGO scene management is disabled."
             );
-            return;
+            return false;
         }
 
         isLoadingScene = true;
@@ -85,10 +119,11 @@ public class NetworkSceneController : MonoBehaviour
             Debug.LogError(
                 $"Failed to load scene {sceneName}. Status: {status}"
             );
-            return;
+            return false;
         }
 
         Debug.Log($"Loading scene for party: {sceneName}");
+        return true;
     }
 
     private static void RemoveDuplicateNetworkManagers()
