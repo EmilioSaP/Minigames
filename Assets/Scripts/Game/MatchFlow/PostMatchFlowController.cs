@@ -316,6 +316,11 @@ public class PostMatchFlowController : NetworkBehaviour
 
         // No additional finishers can be registered after this point.
         acceptingAdditionalFinishers.Value = false;
+        
+        // Finalize all results.
+        // Remaining unresolved players become DNF.
+        resultsManager.FinalizeResultsServer();
+        RegisterRemainingPlayersAsConceded();
 
         if (showResultsScreen)
         {
@@ -343,6 +348,17 @@ public class PostMatchFlowController : NetworkBehaviour
         StartNextMatch(rematchController.WasRematchUnanimous);
 
         postMatchCoroutine = null;
+    }
+
+    private void RegisterRemainingPlayersAsConceded()
+    {
+        foreach (ulong clientId in matchParticipants)
+        {
+            if (!resultsManager.IsPlayerResolved(clientId))
+            {
+                resultsManager.TryRegisterConcededPlayerServer(clientId);
+            }
+        }
     }
 
     private void StartNextMatch(bool rematchApproved)
