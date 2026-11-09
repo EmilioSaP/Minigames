@@ -10,8 +10,101 @@ public class NetworkPlayerSpawnHandler : NetworkBehaviour
 
     // Server-side notification that the respawn teleport has been applied.
     public event Action RespawnTeleportAppliedServer;
+    public event Action<ulong> RespawnRequestedServer;
 
     private bool respawnTeleportPending;
+
+    public void ShowDeathUi(
+        bool canRespawn,
+        bool shouldAutoRespawn,
+        float delay)
+    {
+        if (!IsServer || !IsSpawned)
+            return;
+
+        ShowDeathUiRpc(canRespawn, shouldAutoRespawn, delay);
+    }
+
+    public void UpdateRespawnCountdown(int seconds)
+    {
+        if (!IsServer || !IsSpawned)
+            return;
+
+        UpdateRespawnCountdownRpc(seconds);
+    }
+
+    public void BeginRespawnFadeIn()
+    {
+        if (!IsServer || !IsSpawned)
+            return;
+
+        BeginRespawnFadeInRpc();
+    }
+
+    public void BeginRespawnFadeOut()
+    {
+        if (!IsServer || !IsSpawned)
+            return;
+
+        BeginRespawnFadeOutRpc();
+    }
+
+    [Rpc(SendTo.Owner)]
+    private void ShowDeathUiRpc(
+        bool canRespawn,
+        bool shouldAutoRespawn,
+        float delay)
+    {
+        RespawnUI respawnUI = RespawnUI.FindForScene(gameObject.scene);
+
+        if (respawnUI == null)
+        {
+            Debug.LogError(
+                $"No RespawnUI is available in scene '{gameObject.scene.name}'."
+            );
+            return;
+        }
+
+        respawnUI.ShowDeathState(
+            canRespawn,
+            shouldAutoRespawn,
+            delay,
+            this,
+            GetComponent<DisablePlayer>()
+        );
+    }
+
+    [Rpc(SendTo.Owner)]
+    private void UpdateRespawnCountdownRpc(int seconds)
+    {
+        RespawnUI.FindForScene(gameObject.scene)?.UpdateCountdown(seconds);
+    }
+
+    [Rpc(SendTo.Owner)]
+    private void BeginRespawnFadeInRpc()
+    {
+        RespawnUI.FindForScene(gameObject.scene)?.BeginRespawnFadeIn(
+            GetComponent<DisablePlayer>()
+        );
+    }
+
+    [Rpc(SendTo.Owner)]
+    private void BeginRespawnFadeOutRpc()
+    {
+        RespawnUI.FindForScene(gameObject.scene)?.BeginRespawnFadeOut();
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestRespawnRpc(RpcParams rpcParams = default)
+    {
+        if (!IsServer || !IsSpawned ||
+            rpcParams.Receive.SenderClientId != OwnerClientId)
+        {
+            return;
+        }
+
+        RespawnRequestedServer?.Invoke(OwnerClientId);
+    }
 
     public override void OnNetworkSpawn()
     {

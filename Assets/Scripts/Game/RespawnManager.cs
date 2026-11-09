@@ -18,14 +18,19 @@ public class RespawnManager : MonoBehaviour
 {
     [Header("Respawn Policy")]
     [SerializeField] private RespawnMode respawnMode = RespawnMode.Unlimited;
+    [SerializeField] private bool autoRespawn = true;
 
     [Tooltip("Number of additional respawns. Only used in Limited mode.")]
     [SerializeField] private int maxRespawns = 2;
 
     [Header("Respawn Timing")]
     [SerializeField] private float respawnDelay = 3f;
+    [Tooltip("Time the fade-in remains visible before the respawn teleport.")]
+    [SerializeField] private float respawnFadeInDuration = 0.5f;
 
     [SerializeField] private float teleportAckTimeout = 10f;
+
+    public bool AutoRespawn => autoRespawn;
 
     private NetworkManager networkManager;
     private NetworkSceneManager networkSceneManager;
@@ -43,6 +48,12 @@ public class RespawnManager : MonoBehaviour
 
     // Prevent multiple respawn sequences for one player.
     private readonly Dictionary<ulong, Coroutine> respawnCoroutines = new();
+
+    // Track explicit requests made by owners when automatic respawning is disabled.
+    private readonly HashSet<ulong> manualRespawnRequests = new();
+
+    // Keep request handlers so they can be removed when players unregister.
+    private readonly Dictionary<ulong, Action<ulong>> respawnRequestHandlers = new();
 
     // Await server confirmation that an owner applied the teleport.
     private readonly Dictionary<ulong, Action> pendingRespawnCallbacks = new();
@@ -240,6 +251,18 @@ public class RespawnManager : MonoBehaviour
 
         health.ServerDied += handler;
 
+        NetworkPlayerSpawnHandler spawnHandler =
+            health.GetComponent<NetworkPlayerSpawnHandler>();
+
+        if (spawnHandler != null)
+        {
+            Action<ulong> requestHandler =
+                requestedClientId => HandleRespawnRequested(requestedClientId);
+
+            respawnRequestHandlers.Add(clientId, requestHandler);
+            spawnHandler.RespawnRequestedServer += requestHandler;
+        }
+
         if (!respawnsUsed.ContainsKey(clientId))
             respawnsUsed.Add(clientId, 0);
 
@@ -270,18 +293,30 @@ public class RespawnManager : MonoBehaviour
             if (pendingRespawnCallbacks.TryGetValue(
                 clientId, out Action callback))
             {
-                NetworkPlayerSpawnHandler spawnHandler =
+                NetworkPlayerSpawnHandler callbackSpawnHandler =
                     health.GetComponent<NetworkPlayerSpawnHandler>();
 
-                if (spawnHandler != null)
-                    spawnHandler.RespawnTeleportAppliedServer -= callback;
+                if (callbackSpawnHandler != null)
+                    callbackSpawnHandler.RespawnTeleportAppliedServer -= callback;
 
                 pendingRespawnCallbacks.Remove(clientId);
+            }
+
+            NetworkPlayerSpawnHandler spawnHandler =
+                health.GetComponent<NetworkPlayerSpawnHandler>();
+
+            if (spawnHandler != null &&
+                respawnRequestHandlers.TryGetValue(
+                    clientId, out Action<ulong> requestHandler))
+            {
+                spawnHandler.RespawnRequestedServer -= requestHandler;
+                respawnRequestHandlers.Remove(clientId);
             }
 
             registeredPlayers.Remove(clientId);
         }
 
+        manualRespawnRequests.Remove(clientId);
         respawnsUsed.Remove(clientId);
 
         Debug.Log($"RespawnManager unregistered player {clientId}.");
@@ -308,11 +343,15 @@ public class RespawnManager : MonoBehaviour
 
         if (!CanRespawn(clientId))
         {
+            GetSpawnHandler(health)?.ShowDeathUi(false, autoRespawn, 0);
+
             Debug.Log($"Player {clientId} has been eliminated.");
 
             PlayerEliminated?.Invoke(clientId);
             return;
         }
+
+        GetSpawnHandler(health)?.ShowDeathUi(true, autoRespawn, respawnDelay);
 
         Coroutine routine = StartCoroutine(
             RespawnAfterDelay(clientId, health)
@@ -340,6 +379,25 @@ public class RespawnManager : MonoBehaviour
         }
     }
 
+    private void HandleRespawnRequested(ulong clientId)
+    {
+        if (autoRespawn ||
+            !respawnCoroutines.ContainsKey(clientId) ||
+            !CanRespawn(clientId))
+        {
+            return;
+        }
+
+        manualRespawnRequests.Add(clientId);
+    }
+
+    private NetworkPlayerSpawnHandler GetSpawnHandler(PlayerHealth health)
+    {
+        return health != null
+            ? health.GetComponent<NetworkPlayerSpawnHandler>()
+            : null;
+    }
+
     // --------------------------------------------------
     // RESPAWN SEQUENCE
     // --------------------------------------------------
@@ -348,11 +406,38 @@ public class RespawnManager : MonoBehaviour
         ulong clientId,
         PlayerHealth health)
     {
-        Debug.Log(
-            $"Player {clientId} will respawn in {respawnDelay} seconds."
-        );
+        if (autoRespawn)
+        {
+            float delay = Mathf.Max(0f, respawnDelay);
+            float countdownDeadline = Time.realtimeSinceStartup + delay;
+            int previousCountdown = -1;
 
-        yield return new WaitForSecondsRealtime(respawnDelay);
+            Debug.Log(
+                $"Player {clientId} will respawn in {delay} seconds."
+            );
+
+            while (Time.realtimeSinceStartup < countdownDeadline)
+            {
+                int countdown = Mathf.CeilToInt(
+                    countdownDeadline - Time.realtimeSinceStartup
+                );
+
+                if (countdown != previousCountdown)
+                {
+                    GetSpawnHandler(health)?.UpdateRespawnCountdown(countdown);
+                    previousCountdown = countdown;
+                }
+
+                yield return null;
+            }
+        }
+        else
+        {
+            while (!manualRespawnRequests.Contains(clientId))
+                yield return null;
+
+            manualRespawnRequests.Remove(clientId);
+        }
 
         // Confirm that the player still belongs to this session.
         if (!TryGetCurrentPlayer(clientId, health, out NetworkObject playerObject))
@@ -393,6 +478,11 @@ public class RespawnManager : MonoBehaviour
             yield break;
         }
 
+        spawnHandler.BeginRespawnFadeIn();
+        yield return new WaitForSecondsRealtime(
+            Mathf.Max(0f, respawnFadeInDuration)
+        );
+
         // Prepare an acknowledgment callback before requesting the teleport.
         Action onTeleportApplied = null;
 
@@ -407,6 +497,7 @@ public class RespawnManager : MonoBehaviour
 
             // Only restore health after teleport acknowledgment.
             health.RestoreHealthServer();
+            spawnHandler.BeginRespawnFadeOut();
 
             respawnsUsed.TryGetValue(clientId, out int used);
             respawnsUsed[clientId] = used + 1;
@@ -432,6 +523,7 @@ public class RespawnManager : MonoBehaviour
         {
             spawnHandler.RespawnTeleportAppliedServer -= onTeleportApplied;
             pendingRespawnCallbacks.Remove(clientId);
+            spawnHandler.BeginRespawnFadeOut();
 
             Debug.LogWarning(
                 $"Could not initiate respawn for client {clientId}."
@@ -457,6 +549,7 @@ public class RespawnManager : MonoBehaviour
         {
             spawnHandler.RespawnTeleportAppliedServer -= pendingCallback;
             pendingRespawnCallbacks.Remove(clientId);
+            spawnHandler.BeginRespawnFadeOut();
 
             Debug.LogError(
                 $"Respawn teleport acknowledgment timed out for client {clientId}."

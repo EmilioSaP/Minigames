@@ -21,19 +21,23 @@ public class CountNumberAnimator : MonoBehaviour
 
         if (seconds > 3)
         {
-            AudioManager.Instance.PlayLocalSFX(moreThanThreeAudioClip);
+            if (moreThanThreeAudioClip != null)
+                AudioManager.Instance.PlayLocalSFX(moreThanThreeAudioClip);
         }
         else if (seconds == 3)
         {
-            AudioManager.Instance.PlayLocalSFX(threeAudioClip);
+            if (threeAudioClip != null)
+                AudioManager.Instance.PlayLocalSFX(threeAudioClip);
         }
         else if (seconds == 2)
         {
-            AudioManager.Instance.PlayLocalSFX(twoAudioClip);
+            if (twoAudioClip != null)
+                AudioManager.Instance.PlayLocalSFX(twoAudioClip);
         }
         else if (seconds == 1)
         {
-            AudioManager.Instance.PlayLocalSFX(oneAudioClip);
+            if (oneAudioClip != null)
+                AudioManager.Instance.PlayLocalSFX(oneAudioClip);
         }
 
         if (countdownAnimator != null)
