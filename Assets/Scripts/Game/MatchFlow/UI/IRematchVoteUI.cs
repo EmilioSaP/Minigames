@@ -1,16 +1,6 @@
 using UnityEngine;
 
-public class IRematchVoteUI : MonoBehaviour
+public interface IRematchVoteUI
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    void SetRematchVoteVisible(bool visible);
 }

@@ -12,7 +12,6 @@ public class NextMatchController : NetworkBehaviour
     [SerializeField] private float oneVoterLeftDuration = 10f;
     [SerializeField] private MinigameCatalog minigameCatalog;
     [SerializeField] private NetworkSceneController networkSceneController;
-    [SerializeField] private NextMatchControllerUI nextMatchControllerUI;
 
     private readonly NetworkList<MinigameVoteEntry> votes = new();
 
@@ -406,5 +405,27 @@ public class NextMatchController : NetworkBehaviour
             return ClientId == other.ClientId &&
                    MinigameIndex == other.MinigameIndex;
         }
+    }
+
+    public bool HasPlayerVoted(ulong clientId)
+    {
+        return TryGetVoteForClient(clientId, out _);
+    }
+
+    public bool TryGetVoteForClient(
+        ulong clientId,
+        out int minigameIndex)
+    {
+        for (int i = 0; i < votes.Count; i++)
+        {
+            if (votes[i].ClientId == clientId)
+            {
+                minigameIndex = votes[i].MinigameIndex;
+                return true;
+            }
+        }
+
+        minigameIndex = -1;
+        return false;
     }
 }

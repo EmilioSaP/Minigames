@@ -293,4 +293,28 @@ public class RematchController : NetworkBehaviour
             return ClientId == other.ClientId && Choice == other.Choice;
         }
     }
+
+
+    public bool HasPlayerVoted(ulong clientId)
+    {
+        return TryGetVoteForClient(clientId, out _);
+    }
+
+    public bool TryGetVoteForClient(
+        ulong clientId,
+        out RematchVoteChoice choice)
+    {
+        for (int i = 0; i < votes.Count; i++)
+        {
+            if (votes[i].ClientId == clientId)
+            {
+                choice = votes[i].Choice;
+                return true;
+            }
+        }
+
+        choice = default;
+        return false;
+    }
+
 }

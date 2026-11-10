@@ -37,6 +37,11 @@ public class PostMatchFlowController : NetworkBehaviour
     [SerializeField] private bool spectateOnResultsScreen = true;
     [SerializeField] private float resultsScreenDuration = 10f;
     
+    [Header("Rematch Vote UI")]
+    [SerializeField] private MonoBehaviour rematchVoteUIComponent;
+
+    private IRematchVoteUI rematchVoteUI;
+    
 
     // Synchronized post-match state.
     private readonly NetworkVariable<PostMatchStage> currentStage =
@@ -107,6 +112,7 @@ public class PostMatchFlowController : NetworkBehaviour
 
         currentStage.OnValueChanged += OnStageChanged;
         BindResultsUI();
+        BindRematchVoteUI();
 
         if (CurrentStage == PostMatchStage.ResultsScreen)
             SpectateLocalPlayerOnResultsScreen();
@@ -214,6 +220,40 @@ public class PostMatchFlowController : NetworkBehaviour
         /*resultsScreenUI?.SetResultsVisible(
             CurrentStage == PostMatchStage.ResultsScreen
         ); //starts with 0 alpha, uneccessary*/
+    }
+
+
+    private void BindRematchVoteUI()
+    {
+        if (rematchVoteUIComponent == null)
+        {
+            foreach (MonoBehaviour behaviour in
+                    FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+            {
+                if (behaviour is IRematchVoteUI)
+                {
+                    rematchVoteUIComponent = behaviour;
+                    break;
+                }
+            }
+        }
+
+        if (rematchVoteUIComponent != null)
+        {
+            rematchVoteUI =
+                rematchVoteUIComponent as IRematchVoteUI;
+
+            if (rematchVoteUI == null)
+            {
+                Debug.LogError(
+                    $"{rematchVoteUIComponent.name} does not implement IRematchVoteUI."
+                );
+            }
+        }
+
+        /*rematchVoteUI?.SetRematchVoteVisible(
+            CurrentStage == PostMatchStage.RematchVote
+        );//Starts with 0 alpha, unnecesary */
     }
 
     // -------------------------
@@ -478,6 +518,15 @@ public class PostMatchFlowController : NetworkBehaviour
         {
             resultsScreenUI?.SetResultsVisible(isResultsScreenVisible);
             ResultsScreenVisibilityChanged?.Invoke(isResultsScreenVisible);
+        }
+
+        bool isRematchVoteVisible =
+            newStage == PostMatchStage.RematchVote;
+
+        if (previousStage == PostMatchStage.RematchVote ||
+            isRematchVoteVisible)
+        {
+            rematchVoteUI?.SetRematchVoteVisible(isRematchVoteVisible);
         }
 
         if (newStage == PostMatchStage.Selection)
