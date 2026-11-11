@@ -1,8 +1,12 @@
+using System;
 using Unity.Netcode;
 using UnityEngine;
 
 public class NetworkGameManager : MonoBehaviour
 {
+    public static event Action<DisablePlayer> LocalPlayerReady;
+    public static event Action LocalPlayerLeft;
+
     [SerializeField] private NetworkPlayerSpawn playerSpawn;
 
     private void Start()
@@ -22,6 +26,26 @@ public class NetworkGameManager : MonoBehaviour
 
     private void OnClientConnected(ulong clientId)
     {
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            NetworkObject localPlayerObject =
+                NetworkManager.Singleton.LocalClient.PlayerObject;
+
+            if (localPlayerObject == null)
+            {
+                Debug.LogWarning("Local player object not found.");
+            }
+            else
+            {
+                DisablePlayer localPlayer = localPlayerObject.GetComponent<DisablePlayer>();
+
+                if (localPlayer == null)
+                    Debug.LogWarning("Local player is missing the DisablePlayer component.");
+                else
+                    LocalPlayerReady?.Invoke(localPlayer);
+            }
+        }
+
         if (!NetworkManager.Singleton.IsServer)
             return;
 
@@ -33,11 +57,29 @@ public class NetworkGameManager : MonoBehaviour
         if (player == null)
             return;
 
-        player.transform.position = playerSpawn.PlayerSpawnPoint();
+        NetworkPlayerSpawnHandler spawnHandler =
+            player.GetComponent<NetworkPlayerSpawnHandler>();
+
+        if (spawnHandler == null)
+        {
+            Debug.LogError(
+                $"Player prefab is missing NetworkPlayerSpawnHandler. " +
+                $"Client ID: {clientId}");
+            return;
+        }
+
+        spawnHandler.ApplySpawnFromServer(
+            playerSpawn.PlayerSpawnPoint(),
+            player.transform.rotation,
+            false
+            );
     }
 
     private void OnClientDisconnected(ulong clientId)
     {
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+            LocalPlayerLeft?.Invoke();
+
         if (!NetworkManager.Singleton.IsServer)
             return;
 

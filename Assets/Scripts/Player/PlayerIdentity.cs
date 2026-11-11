@@ -2,6 +2,10 @@ using Unity.Netcode;
 using Unity.Collections;
 using UnityEngine;
 
+/// <summary>
+/// Publishes this player's identity to other clients, initializing its name
+/// from the local saved preference.
+/// </summary>
 public class PlayerIdentity : NetworkBehaviour
 {
     public NetworkVariable<FixedString64Bytes> PlayerName =
