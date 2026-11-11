@@ -41,6 +41,7 @@ public class ParkourRematchVoteUI : MonoBehaviour, IRematchVoteUI
 
     private int showTriggerHash;
     private int hideTriggerHash;
+    private int currentSecond = -1;
 
     private void Awake()
     {
@@ -237,7 +238,11 @@ public class ParkourRematchVoteUI : MonoBehaviour, IRematchVoteUI
         //int remainder = seconds % 60;
 
         //timerText.text = $"{minutes:00}:{remainder:00}";
-        countNumberAnimator.AnimateNumber(seconds);
+        if (seconds != currentSecond)
+        {
+            currentSecond = seconds;
+            countNumberAnimator.AnimateNumber(seconds);
+        }
     }
 
     private void RefreshVoteAvailability()

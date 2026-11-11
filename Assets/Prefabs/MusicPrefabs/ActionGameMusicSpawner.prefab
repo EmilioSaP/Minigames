@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2658931139498228774}
   - component: {fileID: 2509449973216470289}
   m_Layer: 0
-  m_Name: ActionGameMusicSawner
+  m_Name: ActionGameMusicSpawner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

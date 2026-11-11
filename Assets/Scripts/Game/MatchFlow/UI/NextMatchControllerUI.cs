@@ -41,6 +41,7 @@ public class NextMatchControllerUI : MonoBehaviour
 
     private int showTriggerHash;
     private int hideTriggerHash;
+    private int currentSecond = -1;
 
     private void Awake()
     {
@@ -297,11 +298,12 @@ public class NextMatchControllerUI : MonoBehaviour
         float remaining = nextMatchController.VoteTimeRemaining;
 
         int seconds = Mathf.CeilToInt(remaining);
-        //int minutes = seconds / 60;
-        //int remainder = seconds % 60;
-
-        //timerText.text = $"{minutes:00}:{remainder:00}";
-        countNumberAnimator.AnimateNumber(seconds);
+        
+        if (seconds != currentSecond)
+        {
+            currentSecond = seconds;
+            countNumberAnimator.AnimateNumber(seconds);
+        }
     }
 
     private void RefreshVoteProgress()
