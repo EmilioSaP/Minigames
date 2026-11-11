@@ -15,6 +15,8 @@ public class NextMatchController : NetworkBehaviour
 
     private readonly NetworkList<MinigameVoteEntry> votes = new();
 
+    private bool selectionRestrictionApplied;
+
     private readonly NetworkVariable<bool> voteActive =
         new(false, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server);
@@ -57,6 +59,10 @@ public class NextMatchController : NetworkBehaviour
         base.OnNetworkSpawn();
         networkManager = NetworkManager.Singleton;
         votes.OnListChanged += OnVotesChanged;
+        voteActive.OnValueChanged += OnVoteActiveChanged;
+
+        if (IsSelectionActive)
+            ApplySelectionRestriction();
 
         if (IsServer && networkManager != null)
             networkManager.OnConnectionEvent += OnConnectionEvent;
@@ -65,11 +71,49 @@ public class NextMatchController : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         votes.OnListChanged -= OnVotesChanged;
+        voteActive.OnValueChanged -= OnVoteActiveChanged;
 
         if (IsServer && networkManager != null)
             networkManager.OnConnectionEvent -= OnConnectionEvent;
 
         base.OnNetworkDespawn();
+    }
+
+    private void OnVoteActiveChanged(bool previous, bool current)
+    {
+        if (current)
+            ApplySelectionRestriction();
+        else
+            selectionRestrictionApplied = false;
+    }
+
+    private void ApplySelectionRestriction()
+    {
+        Cursor.lockState = CursorLockMode.None;
+
+        if (selectionRestrictionApplied)
+            return;
+
+        NetworkObject localPlayerObject =
+            NetworkManager.Singleton?.LocalClient?.PlayerObject;
+
+        DisablePlayer disablePlayer =
+            localPlayerObject != null
+                ? localPlayerObject.GetComponent<DisablePlayer>()
+                : null;
+
+        if (disablePlayer == null)
+        {
+            Debug.LogWarning(
+                "Cannot restrict the local player for minigame voting: " +
+                "the local player or DisablePlayer component is unavailable.",
+                this
+            );
+            return;
+        }
+
+        disablePlayer.AddSceneScopedRestriction(PlayerControlChannels.All);
+        selectionRestrictionApplied = true;
     }
 
     private void Update()

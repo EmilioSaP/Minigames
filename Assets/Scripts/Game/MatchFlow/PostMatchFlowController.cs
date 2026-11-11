@@ -73,6 +73,7 @@ public class PostMatchFlowController : NetworkBehaviour
     private Coroutine bindingCoroutine;
     private Coroutine postMatchCoroutine;
     private IMatchResultsUI resultsScreenUI;
+    private bool rematchRestrictionApplied;
 
     public event System.Action<PostMatchStage> StageChanged;
     public event System.Action SelectionPhaseStarted;
@@ -113,6 +114,9 @@ public class PostMatchFlowController : NetworkBehaviour
         currentStage.OnValueChanged += OnStageChanged;
         BindResultsUI();
         BindRematchVoteUI();
+
+        if (CurrentStage == PostMatchStage.RematchVote)
+            ApplyRematchRestriction();
 
         if (CurrentStage == PostMatchStage.ResultsScreen)
             SpectateLocalPlayerOnResultsScreen();
@@ -523,6 +527,9 @@ public class PostMatchFlowController : NetworkBehaviour
         bool isRematchVoteVisible =
             newStage == PostMatchStage.RematchVote;
 
+        if (isRematchVoteVisible)
+            ApplyRematchRestriction();
+
         if (previousStage == PostMatchStage.RematchVote ||
             isRematchVoteVisible)
         {
@@ -533,6 +540,35 @@ public class PostMatchFlowController : NetworkBehaviour
         {
             SelectionPhaseStarted?.Invoke();
         }
+    }
+
+    private void ApplyRematchRestriction()
+    {
+        Cursor.lockState = CursorLockMode.None;
+
+        if (rematchRestrictionApplied)
+            return;
+
+        NetworkObject localPlayerObject =
+            NetworkManager.Singleton?.LocalClient?.PlayerObject;
+
+        DisablePlayer disablePlayer =
+            localPlayerObject != null
+                ? localPlayerObject.GetComponent<DisablePlayer>()
+                : null;
+
+        if (disablePlayer == null)
+        {
+            Debug.LogWarning(
+                "Cannot restrict the local player for rematch voting: " +
+                "the local player or DisablePlayer component is unavailable.",
+                this
+            );
+            return;
+        }
+
+        disablePlayer.AddSceneScopedRestriction(PlayerControlChannels.All);
+        rematchRestrictionApplied = true;
     }
 
     public event System.Action<bool> ResultsScreenVisibilityChanged;

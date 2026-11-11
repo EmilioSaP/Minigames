@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class DisablePlayer : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class DisablePlayer : MonoBehaviour
     // Each restriction gets a unique handle.
     private readonly Dictionary<int, PlayerControlChannels> restrictions =
         new Dictionary<int, PlayerControlChannels>();
+
+    private readonly HashSet<int> sceneScopedRestrictionHandles = new();
 
     private int nextRestrictionHandle = 1;
 
@@ -43,6 +46,19 @@ public class DisablePlayer : MonoBehaviour
         return handle;
     }
 
+    public int AddSceneScopedRestriction(PlayerControlChannels channels)
+    {
+        int handle = AddRestriction(channels);
+        if (handle == 0)
+            return 0;
+
+        sceneScopedRestrictionHandles.Add(handle);
+        if (sceneScopedRestrictionHandles.Count == 1)
+            SceneManager.activeSceneChanged += OnActiveSceneChanged;
+
+        return handle;
+    }
+
     public bool RemoveRestriction(int handle)
     {
         if (handle == 0)
@@ -51,7 +67,13 @@ public class DisablePlayer : MonoBehaviour
         bool removed = restrictions.Remove(handle);
 
         if (removed)
+        {
+            sceneScopedRestrictionHandles.Remove(handle);
+            if (sceneScopedRestrictionHandles.Count == 0)
+                SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+
             ApplyRestrictions();
+        }
 
         return removed;
     }
@@ -149,5 +171,16 @@ public class DisablePlayer : MonoBehaviour
 
         if (cameraViewToggle != null)
             cameraViewToggle.SetCameraToggable(cameraToggleAllowed);
+    }
+
+    private void OnActiveSceneChanged(Scene previousScene, Scene newScene)
+    {
+        foreach (int handle in new List<int>(sceneScopedRestrictionHandles))
+            RemoveRestriction(handle);
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
     }
 }
