@@ -21,12 +21,13 @@ public class NextMatchControllerUI : MonoBehaviour
     [SerializeField] private bool showUnavailableOptions = true;
 
     [Header("Vote Information")]
-    [SerializeField] private TMP_Text timerText;
+    //[SerializeField] private TMP_Text timerText;
     [SerializeField] private TMP_Text voteProgressText;
 
     [Header("Animation")]
     [SerializeField] private string showTrigger = "TriggerShowUI";
     [SerializeField] private string hideTrigger = "TriggerHideUI";
+    [SerializeField] private CountNumberAnimator countNumberAnimator;
 
     private readonly List<NextMatchOptionUI> optionInstances = new();
 
@@ -293,16 +294,14 @@ public class NextMatchControllerUI : MonoBehaviour
 
     private void RefreshTimer()
     {
-        if (timerText == null)
-            return;
-
         float remaining = nextMatchController.VoteTimeRemaining;
 
         int seconds = Mathf.CeilToInt(remaining);
-        int minutes = seconds / 60;
-        int remainder = seconds % 60;
+        //int minutes = seconds / 60;
+        //int remainder = seconds % 60;
 
-        timerText.text = $"{minutes:00}:{remainder:00}";
+        //timerText.text = $"{minutes:00}:{remainder:00}";
+        countNumberAnimator.AnimateNumber(seconds);
     }
 
     private void RefreshVoteProgress()

@@ -24,7 +24,7 @@ public class ParkourRematchVoteUI : MonoBehaviour, IRematchVoteUI
     [SerializeField] private GameObject nextMinigameSelected;
 
     [Header("Vote Information")]
-    [SerializeField] private TMP_Text timerText;
+    //[SerializeField] private TMP_Text timerText;
     [SerializeField] private TMP_Text playerVoteText;
     [SerializeField] private TMP_Text rematchVoteCountText;
     [SerializeField] private TMP_Text nextMinigameVoteCountText;
@@ -32,6 +32,7 @@ public class ParkourRematchVoteUI : MonoBehaviour, IRematchVoteUI
     [Header("Animation")]
     [SerializeField] private string showTrigger = "TriggerShowUI";
     [SerializeField] private string hideTrigger = "TriggerHideUI";
+    [SerializeField] private CountNumberAnimator countNumberAnimator;
 
     private Coroutine bindingCoroutine;
 
@@ -226,16 +227,17 @@ public class ParkourRematchVoteUI : MonoBehaviour, IRematchVoteUI
 
     private void RefreshTimer()
     {
-        if (timerText == null || rematchController == null)
+        if (rematchController == null)
             return;
 
         float remaining = rematchController.VoteTimeRemaining;
 
         int seconds = Mathf.CeilToInt(remaining);
-        int minutes = seconds / 60;
-        int remainder = seconds % 60;
+        //int minutes = seconds / 60;
+        //int remainder = seconds % 60;
 
-        timerText.text = $"{minutes:00}:{remainder:00}";
+        //timerText.text = $"{minutes:00}:{remainder:00}";
+        countNumberAnimator.AnimateNumber(seconds);
     }
 
     private void RefreshVoteAvailability()
