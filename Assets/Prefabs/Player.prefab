@@ -5758,7 +5758,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 442197133
+  GlobalObjectIdHash: 2074510670
   InScenePlacedSourceGlobalObjectIdHash: 3758220817
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -6097,6 +6097,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 0a8dd7329f40d554fb869f02ac8edce1, type: 3}
   explodeClip: {fileID: 8300000, guid: fcb8befaecd23e3439330aa4b5d8e07f, type: 3}
   spawnClip: {fileID: 8300000, guid: d50859d646671074cbfe80e7aa6824af, type: 3}
+  respawnClip: {fileID: 8300000, guid: 096b38f12b55bca46b4635cdf6fbdb96, type: 3}
 --- !u!114 &7064147469925891015
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6252,6 +6253,11 @@ MonoBehaviour:
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 100
   IsDead:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  IsInvulnerable:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
