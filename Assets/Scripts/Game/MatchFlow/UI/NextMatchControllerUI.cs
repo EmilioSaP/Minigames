@@ -38,6 +38,7 @@ public class NextMatchControllerUI : MonoBehaviour
     private bool isSubscribed;
     private bool isVisible;
     private bool optionsCreated;
+    private bool hideUntilControllerDespawned;
 
     private int showTriggerHash;
     private int hideTriggerHash;
@@ -106,16 +107,27 @@ public class NextMatchControllerUI : MonoBehaviour
 
     private void Update()
     {
-        if (nextMatchController == null ||
-            !nextMatchController.IsSpawned)
+        if (nextMatchController == null)
         {
             return;
         }
+
+        if (!nextMatchController.IsSpawned)
+        {
+            hideUntilControllerDespawned = false;
+            if (isVisible)
+                SetSelectionVisible(false);
+            return;
+        }
+
+        if (hideUntilControllerDespawned)
+            return;
 
         UpdateSelectionVisibility();
 
         if (isVisible)
         {
+            RefreshOptionInteractivity();
             RefreshTimer();
             RefreshVoteProgress();
         }
@@ -124,6 +136,14 @@ public class NextMatchControllerUI : MonoBehaviour
     // ------------------------------------
     // VISIBILITY
     // ------------------------------------
+
+    public void ResetSelectionUI()
+    {
+        hideUntilControllerDespawned =
+            nextMatchController != null && nextMatchController.IsSpawned;
+        currentSecond = -1;
+        SetSelectionVisible(false);
+    }
 
     private void UpdateSelectionVisibility()
     {
@@ -166,6 +186,7 @@ public class NextMatchControllerUI : MonoBehaviour
         if (visible)
         {
             BuildOptionsIfNeeded();
+            RefreshOptionInteractivity();
             RefreshVoteCounts();
             RefreshVoteProgress();
             RefreshTimer();
@@ -246,7 +267,7 @@ public class NextMatchControllerUI : MonoBehaviour
     {
         if (!isVisible ||
             nextMatchController == null ||
-            !nextMatchController.IsSelectionActive)
+            !nextMatchController.IsVoteActive)
         {
             return;
         }
@@ -314,5 +335,15 @@ public class NextMatchControllerUI : MonoBehaviour
         voteProgressText.text =
             $"{nextMatchController.VotedPlayerCount} / " +
             $"{nextMatchController.ConnectedPlayerCount} players voted";
+    }
+
+    private void RefreshOptionInteractivity()
+    {
+        bool canVote = nextMatchController.IsVoteActive;
+        foreach (NextMatchOptionUI option in optionInstances)
+        {
+            if (option != null)
+                option.SetVotingEnabled(canVote);
+        }
     }
 }

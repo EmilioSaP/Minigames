@@ -17,6 +17,8 @@ public class NextMatchOptionUI : MonoBehaviour
 
     private Action<int> onSelected;
     private int minigameIndex;
+    private bool isAvailable;
+    private bool isVotingEnabled = true;
 
     private void Awake()
     {
@@ -60,11 +62,23 @@ public class NextMatchOptionUI : MonoBehaviour
 
     public void SetAvailable(bool available)
     {
-        if (button != null)
-            button.interactable = available;
+        isAvailable = available;
+        UpdateButtonInteractivity();
 
         if (unavailableIndicator != null)
             unavailableIndicator.SetActive(!available);
+    }
+
+    public void SetVotingEnabled(bool enabled)
+    {
+        isVotingEnabled = enabled;
+        UpdateButtonInteractivity();
+    }
+
+    private void UpdateButtonInteractivity()
+    {
+        if (button != null)
+            button.interactable = isAvailable && isVotingEnabled;
     }
 
     public void SetSelected(bool selected)

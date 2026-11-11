@@ -30,6 +30,10 @@ public class RematchController : NetworkBehaviour
         new(false, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server);
 
+    private readonly NetworkVariable<bool> majorityNextMinigame =
+        new(false, NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
     private readonly NetworkVariable<double> voteEndServerTime =
         new(0, NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server);
@@ -42,6 +46,8 @@ public class RematchController : NetworkBehaviour
     public bool IsVoteActive => voteActive.Value;
     public bool IsVoteComplete => voteComplete.Value;
     public bool WasRematchUnanimous => voteComplete.Value && unanimousRematch.Value;
+    public bool WasNextMinigameMajority =>
+        voteComplete.Value && majorityNextMinigame.Value;
     public int ConnectedPlayerCount => GetConnectedClientIds().Count;
     public int VotedPlayerCount => votes.Count;
 
@@ -114,6 +120,7 @@ public class RematchController : NetworkBehaviour
 
         votes.Clear();
         unanimousRematch.Value = false;
+        majorityNextMinigame.Value = false;
         voteComplete.Value = false;
         voteEndServerTime.Value =
             networkManager.ServerTime.Time + Mathf.Max(0f, rematchVoteDuration);
@@ -207,6 +214,10 @@ public class RematchController : NetworkBehaviour
         }
 
         unanimousRematch.Value = allAgreed;
+        majorityNextMinigame.Value =
+            connectedClients.Count > 0 &&
+            GetVoteCount(RematchVoteChoice.NextMinigame) * 2 >
+            connectedClients.Count;
         voteActive.Value = false;
         voteComplete.Value = true;
         VoteCountsChanged?.Invoke();

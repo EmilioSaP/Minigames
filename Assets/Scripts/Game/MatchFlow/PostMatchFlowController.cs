@@ -10,6 +10,7 @@ public enum PostMatchStage : byte
     FinishPresentation,
     AdditionalFinishWindow,
     ResultsScreen,
+    RematchVoteDelay,
     RematchVote,
     Selection
 }
@@ -39,6 +40,8 @@ public class PostMatchFlowController : NetworkBehaviour
     
     [Header("Rematch Vote UI")]
     [SerializeField] private MonoBehaviour rematchVoteUIComponent;
+    [SerializeField] private float rematchVoteShowDelay = 0.5f;
+    [SerializeField] private float decisionAcknowledgementDuration = 2f;
 
     private IRematchVoteUI rematchVoteUI;
     
@@ -384,6 +387,11 @@ public class PostMatchFlowController : NetworkBehaviour
             }
         }
 
+        currentStage.Value = PostMatchStage.RematchVoteDelay;
+        yield return new WaitForSecondsRealtime(
+            Mathf.Max(0f, rematchVoteShowDelay)
+        );
+
         currentStage.Value = PostMatchStage.RematchVote;
         Debug.Log("Rematch vote started.");
         rematchController.BeginVoteServer();
@@ -393,7 +401,24 @@ public class PostMatchFlowController : NetworkBehaviour
             yield return null;
         }
 
-        StartNextMatch(rematchController.WasRematchUnanimous);
+        yield return new WaitForSecondsRealtime(
+            Mathf.Max(0f, decisionAcknowledgementDuration)
+        );
+
+        if (rematchController.WasRematchUnanimous)
+        {
+            currentStage.Value = PostMatchStage.None;
+            nextMatchController.BeginSelectionServer(true);
+        }
+        else if (rematchController.WasNextMinigameMajority)
+        {
+            StartNextMatch();
+        }
+        else
+        {
+            currentStage.Value = PostMatchStage.None;
+            nextMatchController.ReturnPartyToLobbyServer();
+        }
 
         postMatchCoroutine = null;
     }
@@ -409,11 +434,11 @@ public class PostMatchFlowController : NetworkBehaviour
         }
     }
 
-    private void StartNextMatch(bool rematchApproved)
+    private void StartNextMatch()
     {
         currentStage.Value = PostMatchStage.Selection;
         Debug.Log("Post-match selection phase started.");
-        nextMatchController.BeginSelectionServer(rematchApproved);
+        nextMatchController.BeginSelectionServer(false);
     }
 
     private void OnRematchVoteCompleted(bool rematchApproved)

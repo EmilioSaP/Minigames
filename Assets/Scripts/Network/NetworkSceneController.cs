@@ -64,6 +64,9 @@ public class NetworkSceneController : MonoBehaviour
             return;
         }
 
+        if (SceneManager.GetActiveScene().name == lobbySceneName)
+            return;
+
         LoadPartyScene(networkManager, lobbySceneName);
     }
 

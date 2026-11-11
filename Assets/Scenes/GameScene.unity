@@ -202,9 +202,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1110572182}
-        m_TargetAssemblyTypeName: MatchExitController, Assembly-CSharp
-        m_MethodName: LeaveParty
+      - m_Target: {fileID: 1764040712}
+        m_TargetAssemblyTypeName: PlayLocalAudio, Assembly-CSharp
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -214,9 +214,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1764040712}
-        m_TargetAssemblyTypeName: PlayLocalAudio, Assembly-CSharp
-        m_MethodName: PlayAudio
+      - m_Target: {fileID: 1148979660}
+        m_TargetAssemblyTypeName: ParkourRematchVoteUI, Assembly-CSharp
+        m_MethodName: VoteNextMinigame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1015,11 +1015,13 @@ MonoBehaviour:
   countdownText: {fileID: 1886556962}
   countdownAnimator: {fileID: 135202242}
   fadeCanvasGroup: {fileID: 135202240}
-  moreThanThreeAudioClip: {fileID: 8300000, guid: b183e8de5d04648edba82866b6edf3fd, type: 3}
+  moreThanTenAudioClip: {fileID: 8300000, guid: 156071062f413a74a808a937850bdfcf, type: 3}
+  moreThanThreeAudioClip: {fileID: 8300000, guid: 6acf8a42b66dbd74fa599a3ee1d55e37, type: 3}
   threeAudioClip: {fileID: 8300000, guid: 7202679b756dd411984f3fdd48a5ee37, type: 3}
   twoAudioClip: {fileID: 8300000, guid: c1a42d2a3b5414aa8bb1283c6f85bc4c, type: 3}
   oneAudioClip: {fileID: 8300000, guid: 90023b8062b2d45dcacf2257f800153a, type: 3}
   goAudioClip: {fileID: 0}
+  fadeAfterNumber: 0
 --- !u!1 &135688140
 GameObject:
   m_ObjectHideFlags: 0
@@ -2048,7 +2050,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -385}
-  m_SizeDelta: {x: 400, y: 100}
+  m_SizeDelta: {x: 550, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &323018832
 MonoBehaviour:
@@ -3418,7 +3420,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_TargetDisplay: 0
 --- !u!224 &527406124
 RectTransform:
@@ -3831,6 +3833,8 @@ MonoBehaviour:
   spectateOnResultsScreen: 1
   resultsScreenDuration: 6
   rematchVoteUIComponent: {fileID: 0}
+  rematchVoteShowDelay: 0.5
+  decisionAcknowledgementDuration: 1
 --- !u!114 &575880752
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3932,6 +3936,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   nextGameVoteDuration: 40
   oneVoterLeftDuration: 10
+  decisionAcknowledgementDuration: 2
   minigameCatalog: {fileID: 11400000, guid: 371a0656e3a34bb3b0eb3f088834c49c, type: 2}
   networkSceneController: {fileID: 1983114567}
 --- !u!114 &575880756
@@ -4451,7 +4456,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_TargetDisplay: 0
 --- !u!1 &627145803
 GameObject:
@@ -5091,11 +5096,13 @@ MonoBehaviour:
   countdownText: {fileID: 1329920259}
   countdownAnimator: {fileID: 663523331}
   fadeCanvasGroup: {fileID: 663523329}
-  moreThanThreeAudioClip: {fileID: 8300000, guid: b183e8de5d04648edba82866b6edf3fd, type: 3}
+  moreThanTenAudioClip: {fileID: 8300000, guid: 156071062f413a74a808a937850bdfcf, type: 3}
+  moreThanThreeAudioClip: {fileID: 8300000, guid: 6acf8a42b66dbd74fa599a3ee1d55e37, type: 3}
   threeAudioClip: {fileID: 8300000, guid: 7202679b756dd411984f3fdd48a5ee37, type: 3}
   twoAudioClip: {fileID: 8300000, guid: c1a42d2a3b5414aa8bb1283c6f85bc4c, type: 3}
   oneAudioClip: {fileID: 8300000, guid: 90023b8062b2d45dcacf2257f800153a, type: 3}
   goAudioClip: {fileID: 0}
+  fadeAfterNumber: 0
 --- !u!1 &670719594
 GameObject:
   m_ObjectHideFlags: 0
@@ -7301,11 +7308,13 @@ MonoBehaviour:
   countdownText: {fileID: 1836154006}
   countdownAnimator: {fileID: 1041397265}
   fadeCanvasGroup: {fileID: 1041397266}
+  moreThanTenAudioClip: {fileID: 0}
   moreThanThreeAudioClip: {fileID: 8300000, guid: ffd45bf01ec64694c9cc2ef18aae60fb, type: 3}
   threeAudioClip: {fileID: 8300000, guid: ffd45bf01ec64694c9cc2ef18aae60fb, type: 3}
   twoAudioClip: {fileID: 8300000, guid: ffd45bf01ec64694c9cc2ef18aae60fb, type: 3}
   oneAudioClip: {fileID: 8300000, guid: ffd45bf01ec64694c9cc2ef18aae60fb, type: 3}
   goAudioClip: {fileID: 0}
+  fadeAfterNumber: 1
 --- !u!95 &1041397265
 Animator:
   serializedVersion: 7
@@ -8310,7 +8319,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_TargetDisplay: 0
 --- !u!114 &1148979660
 MonoBehaviour:
@@ -9031,7 +9040,7 @@ GameObject:
   - component: {fileID: 1329920260}
   - component: {fileID: 1329920259}
   m_Layer: 5
-  m_Name: CountText
+  m_Name: UIAnimatedText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9103,8 +9112,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 80
-  m_fontSizeBase: 80
+  m_fontSize: 70
+  m_fontSizeBase: 70
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -10099,7 +10108,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 40, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &1524857283
 CanvasGroup:
@@ -10357,11 +10366,13 @@ MonoBehaviour:
   countdownText: {fileID: 675964425}
   countdownAnimator: {fileID: 1531493447}
   fadeCanvasGroup: {fileID: 1531493441}
+  moreThanTenAudioClip: {fileID: 0}
   moreThanThreeAudioClip: {fileID: 8300000, guid: b086da8ca14a64d2aab4a874ee63090e, type: 3}
   threeAudioClip: {fileID: 8300000, guid: b086da8ca14a64d2aab4a874ee63090e, type: 3}
   twoAudioClip: {fileID: 8300000, guid: b086da8ca14a64d2aab4a874ee63090e, type: 3}
   oneAudioClip: {fileID: 8300000, guid: b086da8ca14a64d2aab4a874ee63090e, type: 3}
   goAudioClip: {fileID: 8300000, guid: 8fee4f470356244e298a328cce3e295e, type: 3}
+  fadeAfterNumber: 1
 --- !u!1 &1532892310
 GameObject:
   m_ObjectHideFlags: 0
@@ -10579,9 +10590,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1110572182}
-        m_TargetAssemblyTypeName: MatchExitController, Assembly-CSharp
-        m_MethodName: LeaveParty
+      - m_Target: {fileID: 1764040712}
+        m_TargetAssemblyTypeName: PlayLocalAudio, Assembly-CSharp
+        m_MethodName: PlayAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -10591,9 +10602,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1764040712}
-        m_TargetAssemblyTypeName: PlayLocalAudio, Assembly-CSharp
-        m_MethodName: PlayAudio
+      - m_Target: {fileID: 1148979660}
+        m_TargetAssemblyTypeName: ParkourRematchVoteUI, Assembly-CSharp
+        m_MethodName: VoteRematch
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -11895,7 +11906,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -5.99, z: 0}
-  m_LocalScale: {x: 1200, y: 10, z: 1200}
+  m_LocalScale: {x: 3000, y: 10, z: 3000}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -12837,7 +12848,7 @@ GameObject:
   - component: {fileID: 1886556963}
   - component: {fileID: 1886556962}
   m_Layer: 5
-  m_Name: CountText
+  m_Name: UIAnimatedText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12909,8 +12920,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 80
-  m_fontSizeBase: 80
+  m_fontSize: 70
+  m_fontSizeBase: 70
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -14304,7 +14315,7 @@ MonoBehaviour:
   forwardRange: {x: 3, y: 5}
   upRange: {x: 0.4, y: 0.8}
   maxTurn: 20
-  countRange: {x: 1, y: 2}
+  countRange: {x: 7, y: 7}
 --- !u!4 &1972131285
 Transform:
   m_ObjectHideFlags: 0

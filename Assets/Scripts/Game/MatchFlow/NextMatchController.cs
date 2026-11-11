@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -10,12 +11,17 @@ public class NextMatchController : NetworkBehaviour
     [Header("Next Game Vote")]
     [SerializeField] private float nextGameVoteDuration = 40f;
     [SerializeField] private float oneVoterLeftDuration = 12f;
+    [SerializeField] private float decisionAcknowledgementDuration = 2f;
     [SerializeField] private MinigameCatalog minigameCatalog;
     [SerializeField] private NetworkSceneController networkSceneController;
 
     private readonly NetworkList<MinigameVoteEntry> votes = new();
 
     private bool selectionRestrictionApplied;
+
+    private readonly NetworkVariable<bool> selectionVisible =
+        new(false, NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
 
     private readonly NetworkVariable<bool> voteActive =
         new(false, NetworkVariableReadPermission.Everyone,
@@ -31,7 +37,8 @@ public class NextMatchController : NetworkBehaviour
     public event Action VoteCountsChanged;
     public event Action<string> SelectionCompleted;
 
-    public bool IsSelectionActive => voteActive.Value;
+    public bool IsSelectionActive => selectionVisible.Value;
+    public bool IsVoteActive => voteActive.Value;
     public IReadOnlyList<MinigameCatalog.MinigameOption> Minigames =>
         minigameCatalog != null
             ? minigameCatalog.Minigames
@@ -58,8 +65,16 @@ public class NextMatchController : NetworkBehaviour
     {
         base.OnNetworkSpawn();
         networkManager = NetworkManager.Singleton;
+
+        if (IsServer)
+        {
+            votes.Clear();
+            selectionVisible.Value = false;
+            voteActive.Value = false;
+        }
+
         votes.OnListChanged += OnVotesChanged;
-        voteActive.OnValueChanged += OnVoteActiveChanged;
+        selectionVisible.OnValueChanged += OnSelectionVisibleChanged;
 
         if (IsSelectionActive)
             ApplySelectionRestriction();
@@ -71,7 +86,7 @@ public class NextMatchController : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         votes.OnListChanged -= OnVotesChanged;
-        voteActive.OnValueChanged -= OnVoteActiveChanged;
+        selectionVisible.OnValueChanged -= OnSelectionVisibleChanged;
 
         if (IsServer && networkManager != null)
             networkManager.OnConnectionEvent -= OnConnectionEvent;
@@ -79,7 +94,7 @@ public class NextMatchController : NetworkBehaviour
         base.OnNetworkDespawn();
     }
 
-    private void OnVoteActiveChanged(bool previous, bool current)
+    private void OnSelectionVisibleChanged(bool previous, bool current)
     {
         if (current)
             ApplySelectionRestriction();
@@ -180,22 +195,49 @@ public class NextMatchController : NetworkBehaviour
         if (rematchApproved)
         {
             string currentScene = SceneManager.GetActiveScene().name;
-            SelectionCompleted?.Invoke(currentScene);
-            networkSceneController.LoadPartyScene(currentScene);
+            int currentOptionIndex = -1;
+            for (int i = 0; i < minigameCatalog.Minigames.Count; i++)
+            {
+                MinigameCatalog.MinigameOption option =
+                    minigameCatalog.Minigames[i];
+                if (option != null && option.sceneName == currentScene)
+                {
+                    currentOptionIndex = i;
+                    break;
+                }
+            }
+
+            List<int> availableOptions =
+                GetAvailableOptionIndices(networkManager.ConnectedClientsIds.Count);
+            if (currentOptionIndex < 0 ||
+                !availableOptions.Contains(currentOptionIndex))
+            {
+                Debug.LogWarning(
+                    $"The current scene {currentScene} is not available for " +
+                    $"{networkManager.ConnectedClientsIds.Count} players. Returning to the lobby."
+                );
+                ReturnPartyToLobbyServer();
+                return;
+            }
+
+            if (networkSceneController.LoadPartyScene(currentScene))
+                SelectionCompleted?.Invoke(currentScene);
             return;
         }
 
         if (GetAvailableOptionIndices(networkManager.ConnectedClientsIds.Count).Count == 0)
         {
-            Debug.LogError(
-                $"No minigames are configured for {networkManager.ConnectedClientsIds.Count} connected players."
+            Debug.LogWarning(
+                $"No minigames are configured for {networkManager.ConnectedClientsIds.Count} connected players. Returning to the lobby."
             );
+            ReturnPartyToLobbyServer();
             return;
         }
 
         votes.Clear();
         voteEndServerTime.Value =
             networkManager.ServerTime.Time + Mathf.Max(0f, nextGameVoteDuration);
+        selectionVisible.Value = true;
         voteActive.Value = true;
         SelectionStarted?.Invoke();
         VoteCountsChanged?.Invoke();
@@ -296,15 +338,23 @@ public class NextMatchController : NetworkBehaviour
         if (!IsServer || !voteActive.Value)
             return;
 
+        voteActive.Value = false;
+
+        if (votes.Count == 0)
+        {
+            StartCoroutine(FinishSelectionAfterAcknowledgement(-1));
+            return;
+        }
+
         List<int> availableOptions =
             GetAvailableOptionIndices(networkManager.ConnectedClientsIds.Count);
 
         if (availableOptions.Count == 0)
         {
-            voteActive.Value = false;
-            Debug.LogError(
-                $"No minigames are configured for {networkManager.ConnectedClientsIds.Count} connected players."
+            Debug.LogWarning(
+                $"No minigames are configured for {networkManager.ConnectedClientsIds.Count} connected players. Returning to the lobby."
             );
+            StartCoroutine(FinishSelectionAfterAcknowledgement(-1));
             return;
         }
 
@@ -312,11 +362,58 @@ public class NextMatchController : NetworkBehaviour
         if (selectedIndex < 0)
             selectedIndex = ChooseWeightedOption(availableOptions);
 
-        voteActive.Value = false;
+        StartCoroutine(FinishSelectionAfterAcknowledgement(selectedIndex));
+    }
+
+    private IEnumerator FinishSelectionAfterAcknowledgement(int selectedIndex)
+    {
+        if (networkManager == null)
+            yield break;
+
+        double acknowledgementEnd =
+            networkManager.ServerTime.Time +
+            Mathf.Max(0f, decisionAcknowledgementDuration);
+        while (networkManager != null &&
+               networkManager.ServerTime.Time < acknowledgementEnd)
+        {
+            yield return null;
+        }
+
+        if (networkManager == null || !networkManager.IsListening)
+            yield break;
+
+        selectionVisible.Value = false;
+
+        if (selectedIndex < 0)
+        {
+            Debug.Log("No minigame votes were received. Returning the party to the lobby.");
+            ReturnPartyToLobbyServer();
+            yield break;
+        }
 
         string sceneName = minigameCatalog.Minigames[selectedIndex].sceneName;
         SelectionCompleted?.Invoke(sceneName);
         networkSceneController.LoadPartyScene(sceneName);
+    }
+
+    public void ReturnPartyToLobbyServer()
+    {
+        if (!IsServer || !IsSpawned)
+        {
+            Debug.LogWarning("Only the server can return the party to the lobby.");
+            return;
+        }
+
+        if (networkSceneController == null)
+            networkSceneController = FindFirstObjectByType<NetworkSceneController>();
+
+        if (networkSceneController == null)
+        {
+            Debug.LogError("Cannot return the party: NetworkSceneController was not found.");
+            return;
+        }
+
+        networkSceneController.ReturnPartyToLobby();
     }
 
     private int GetUnanimousOptionIndex()

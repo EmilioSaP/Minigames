@@ -9,17 +9,27 @@ public class CountNumberAnimator : MonoBehaviour
     [SerializeField] private FadeCanvasGroupScript fadeCanvasGroup;
 
     [Header("Audios")] 
+    [SerializeField] private AudioClip moreThanTenAudioClip;    
     [SerializeField] private AudioClip moreThanThreeAudioClip;    
     [SerializeField] private AudioClip threeAudioClip;    
     [SerializeField] private AudioClip twoAudioClip;
     [SerializeField] private AudioClip oneAudioClip;
     [SerializeField] private AudioClip goAudioClip;
 
+    [Header("Settings")]
+    [SerializeField] private bool fadeAfterNumber = false;
+
     public void AnimateNumber(int seconds)
     {
         ShowText(seconds.ToString());
 
-        if (seconds > 3)
+        
+        if (seconds > 10)
+        {
+            if (moreThanTenAudioClip != null)
+                AudioManager.Instance.PlayLocalSFX(moreThanTenAudioClip);
+        }
+        else if (seconds > 3)
         {
             if (moreThanThreeAudioClip != null)
                 AudioManager.Instance.PlayLocalSFX(moreThanThreeAudioClip);
@@ -41,7 +51,14 @@ public class CountNumberAnimator : MonoBehaviour
         }
 
         if (countdownAnimator != null)
-            countdownAnimator.SetTrigger("Countdown");
+        if (fadeAfterNumber)
+            {
+                countdownAnimator.SetTrigger("CountdownFade");
+            }
+            else
+            {
+                countdownAnimator.SetTrigger("Countdown");
+            }
     }
 
     public void AnimateGo(string value)

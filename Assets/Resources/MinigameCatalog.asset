@@ -17,3 +17,7 @@ MonoBehaviour:
     sceneName: GameScene
     minimumPlayers: 1
     maximumPlayers: 8
+  - displayName: Parkour (Long)
+    sceneName: ParkourLongScene
+    minimumPlayers: 1
+    maximumPlayers: 8
