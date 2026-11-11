@@ -77,8 +77,7 @@ public class NextMatchOptionUI : MonoBehaviour
     {
         if (voteCountText != null)
         {
-            voteCountText.text =
-                count == 1 ? "1 vote" : $"{count} votes";
+            voteCountText.text = count.ToString();
         }
     }
 }

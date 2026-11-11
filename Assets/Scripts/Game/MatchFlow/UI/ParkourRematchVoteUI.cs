@@ -17,7 +17,6 @@ public class ParkourRematchVoteUI : MonoBehaviour, IRematchVoteUI
     [Header("Buttons")]
     [SerializeField] private Button rematchButton;
     [SerializeField] private Button nextMinigameButton;
-    [SerializeField] private Button leavePartyButton;
 
     [Header("Selection Indicators")]
     [SerializeField] private GameObject rematchSelected;
@@ -262,9 +261,6 @@ public class ParkourRematchVoteUI : MonoBehaviour, IRematchVoteUI
 
         if (nextMinigameButton != null)
             nextMinigameButton.interactable = interactable;
-
-        if (leavePartyButton != null)
-            leavePartyButton.interactable = interactable;
     }
 
     private void RefreshLocalSelection()

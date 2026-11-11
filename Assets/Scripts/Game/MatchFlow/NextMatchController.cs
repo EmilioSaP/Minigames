@@ -9,7 +9,7 @@ public class NextMatchController : NetworkBehaviour
 {
     [Header("Next Game Vote")]
     [SerializeField] private float nextGameVoteDuration = 40f;
-    [SerializeField] private float oneVoterLeftDuration = 10f;
+    [SerializeField] private float oneVoterLeftDuration = 12f;
     [SerializeField] private MinigameCatalog minigameCatalog;
     [SerializeField] private NetworkSceneController networkSceneController;
 
