@@ -65,6 +65,7 @@ public class NextMatchController : NetworkBehaviour
     {
         base.OnNetworkSpawn();
         networkManager = NetworkManager.Singleton;
+        selectionRestrictionApplied = false;
 
         if (IsServer)
         {
@@ -75,9 +76,11 @@ public class NextMatchController : NetworkBehaviour
 
         votes.OnListChanged += OnVotesChanged;
         selectionVisible.OnValueChanged += OnSelectionVisibleChanged;
+        NetworkGameManager.LocalPlayerReady += OnLocalPlayerReady;
+        NetworkGameManager.LocalPlayerLeft += OnLocalPlayerLeft;
 
         if (IsSelectionActive)
-            ApplySelectionRestriction();
+            ApplySelectionRestriction(null);
 
         if (IsServer && networkManager != null)
             networkManager.OnConnectionEvent += OnConnectionEvent;
@@ -87,6 +90,9 @@ public class NextMatchController : NetworkBehaviour
     {
         votes.OnListChanged -= OnVotesChanged;
         selectionVisible.OnValueChanged -= OnSelectionVisibleChanged;
+        NetworkGameManager.LocalPlayerReady -= OnLocalPlayerReady;
+        NetworkGameManager.LocalPlayerLeft -= OnLocalPlayerLeft;
+        selectionRestrictionApplied = false;
 
         if (IsServer && networkManager != null)
             networkManager.OnConnectionEvent -= OnConnectionEvent;
@@ -97,25 +103,39 @@ public class NextMatchController : NetworkBehaviour
     private void OnSelectionVisibleChanged(bool previous, bool current)
     {
         if (current)
-            ApplySelectionRestriction();
+            ApplySelectionRestriction(null);
         else
             selectionRestrictionApplied = false;
     }
 
-    private void ApplySelectionRestriction()
+    private void OnLocalPlayerReady(DisablePlayer player)
+    {
+        if (IsSelectionActive)
+            ApplySelectionRestriction(player);
+    }
+
+    private void OnLocalPlayerLeft()
+    {
+        selectionRestrictionApplied = false;
+    }
+
+    private void ApplySelectionRestriction(DisablePlayer disablePlayer)
     {
         Cursor.lockState = CursorLockMode.None;
 
         if (selectionRestrictionApplied)
             return;
 
-        NetworkObject localPlayerObject =
-            NetworkManager.Singleton?.LocalClient?.PlayerObject;
+        if (disablePlayer == null)
+        {
+            NetworkObject localPlayerObject =
+                NetworkManager.Singleton?.LocalClient?.PlayerObject;
 
-        DisablePlayer disablePlayer =
-            localPlayerObject != null
-                ? localPlayerObject.GetComponent<DisablePlayer>()
-                : null;
+            disablePlayer =
+                localPlayerObject != null
+                    ? localPlayerObject.GetComponent<DisablePlayer>()
+                    : null;
+        }
 
         if (disablePlayer == null)
         {
