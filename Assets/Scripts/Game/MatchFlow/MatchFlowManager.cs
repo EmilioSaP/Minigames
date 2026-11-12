@@ -221,11 +221,43 @@ public class MatchFlowManager : NetworkBehaviour
     {
         Debug.Log($"Match phase changed: {previousPhase} → {newPhase}");
 
+        if (IsServer && (newPhase == MatchPhase.WaitingForPlayers || newPhase == MatchPhase.Preparing || newPhase == MatchPhase.Countdown))
+        {
+            SetConnectedPlayersInvulnerable(true);
+        }
+
+        if (IsServer && newPhase == MatchPhase.InProgress)
+        {
+            SetConnectedPlayersInvulnerable(false);
+        }
+
         PhaseChanged?.Invoke(newPhase);
 
         if (newPhase == MatchPhase.Preparing && IsClient)
         {
             StartLocalPreparationIfNeeded();
+        }
+    }
+
+    private void SetConnectedPlayersInvulnerable(bool invulnerable)
+    {
+        foreach (NetworkClient client in networkManager.ConnectedClientsList)
+        {
+            PlayerHealth health =
+                client.PlayerObject != null
+                    ? client.PlayerObject.GetComponent<PlayerHealth>()
+                    : null;
+
+            if (health == null)
+            {
+                Debug.LogError(
+                    $"Player {client.ClientId} has no PlayerHealth component.",
+                    this
+                );
+                continue;
+            }
+
+            health.SetInvulnerableServer(invulnerable);
         }
     }
 

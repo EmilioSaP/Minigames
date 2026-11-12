@@ -55,8 +55,15 @@ public class PlayerHealth : NetworkBehaviour, IDamageable
 
     private void OnActiveSceneChanged(Scene previousScene, Scene newScene)
     {
-        if (IsServer && IsSpawned)
-            IsInvulnerable.Value = false;
+        if (!IsServer || !IsSpawned)
+            return;
+
+        MatchFlowManager matchFlow =
+            FindFirstObjectByType<MatchFlowManager>();
+
+        IsInvulnerable.Value =
+            matchFlow != null &&
+            matchFlow.CurrentPhase != MatchPhase.InProgress;
     }
 
     public void ApplyDamage(DamageInfo damageInfo)
