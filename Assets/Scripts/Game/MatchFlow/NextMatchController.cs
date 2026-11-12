@@ -105,7 +105,11 @@ public class NextMatchController : NetworkBehaviour
         if (current)
             ApplySelectionRestriction(null);
         else
+        {
             selectionRestrictionApplied = false;
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 
     private void OnLocalPlayerReady(DisablePlayer player)

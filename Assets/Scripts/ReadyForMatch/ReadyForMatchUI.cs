@@ -6,6 +6,11 @@ public class ReadyForMatchUI : MonoBehaviour
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text instructionText;
 
+    public void SetVisible(bool visible)
+    {
+        gameObject.SetActive(visible);
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void SetReadyUI()
     {
@@ -17,5 +22,10 @@ public class ReadyForMatchUI : MonoBehaviour
     {
         statusText.text = "[Not Ready]";
         instructionText.text = "Press [R] to mark as not ready";
+    }
+    public void AllPlayersReady()
+    {
+        statusText.text = "All players are ready!";
+        SetVisible(false);
     }
 }

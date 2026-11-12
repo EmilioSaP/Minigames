@@ -1,11 +1,30 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerReadyForMatchTag : MonoBehaviour
 {
-    [SerializeField] private TMP_Text nameText;
+    [SerializeField] private TMP_Text readyStatusText;
+    [SerializeField] private string lobbySceneName = "LobbyScene";
 
     private Transform localCamera;
+
+    private void OnEnable()
+    {
+        SceneManager.activeSceneChanged += OnActiveSceneChanged;
+        ReadyForMatchController.InstanceAvailable += OnControllerAvailable;
+        OnControllerAvailable(ReadyForMatchController.Instance);
+        SetVisible(SceneManager.GetActiveScene().name == lobbySceneName);
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+        ReadyForMatchController.InstanceAvailable -= OnControllerAvailable;
+
+        if (ReadyForMatchController.Instance != null)
+            ReadyForMatchController.Instance.UnregisterPlayerReadyTag(this);
+    }
 
     private void Start()
     {
@@ -30,11 +49,35 @@ public class PlayerReadyForMatchTag : MonoBehaviour
 
     public void SetReadyTag()
     {
-        nameText.text = "[Ready]";
+        if (readyStatusText != null)
+            readyStatusText.text = "[Ready]";
     }
 
     public void SetNotReadyTag()
     {
-        nameText.text = "[Not Ready]";
+        if (readyStatusText != null)
+            readyStatusText.text = "[Not Ready]";
+    }
+
+    public void SetVisible(bool visible)
+    {
+        if (readyStatusText != null)
+            readyStatusText.enabled = visible;
+    }
+
+    private void OnActiveSceneChanged(Scene previousScene, Scene newScene)
+    {
+        bool isLobby = newScene.name == lobbySceneName;
+        SetVisible(isLobby);
+
+        if (isLobby)
+            SetNotReadyTag();
+    }
+
+    private void OnControllerAvailable(
+        ReadyForMatchController controller)
+    {
+        if (controller != null)
+            controller.RegisterPlayerReadyTag(this);
     }
 }
