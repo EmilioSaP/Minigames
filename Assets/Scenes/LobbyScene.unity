@@ -2273,7 +2273,7 @@ MonoBehaviour:
   showUnavailableOptions: 1
   voteProgressText: {fileID: 1837924613}
   showTrigger: FadeIn
-  hideTrigger: FadeOut
+  hideTrigger: Disappear
   countNumberAnimator: {fileID: 689714107}
 --- !u!114 &275208105
 MonoBehaviour:
