@@ -910,7 +910,15 @@ MonoBehaviour:
   resultsLayout: {fileID: 2117529295}
   resultPrefab: {fileID: 64060724101501383, guid: bd124b93bccad6d4f970e7e9f4caf636, type: 3}
   resultsManager: {fileID: 575880752}
-  layoutPresets: []
+  layoutPresets:
+  - minimumPlayers: 2
+    maximumPlayers: 4
+    rowHeight: 10
+    spacing: 120
+    paddingLeft: 10
+    paddingRight: 10
+    paddingTop: 10
+    paddingBottom: 10
   rowStaggerDelay: 0.2
   screenExitAnimationDuration: 0.5
 --- !u!1 &135202238

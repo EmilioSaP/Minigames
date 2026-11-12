@@ -11250,6 +11250,7 @@ GameObject:
   - component: {fileID: 4229826527391531855}
   - component: {fileID: 6918061636176631843}
   - component: {fileID: 214061204490749804}
+  - component: {fileID: 6397666014530741664}
   m_Layer: 6
   m_Name: PlayerCamera
   m_TagString: MainCamera
@@ -11367,6 +11368,23 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &6397666014530741664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5310656761020494750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47f486815bb854594819da143fb01870, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFOVController
+  playerMovement: {fileID: 565810354642723345}
+  playerCamera: {fileID: 6918061636176631843}
+  normalFOV: 60
+  sprintFOV: 75
+  transitionSpeed: 10
 --- !u!1 &5322948487303994190
 GameObject:
   m_ObjectHideFlags: 0
