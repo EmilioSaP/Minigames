@@ -18,6 +18,8 @@ public class NextMatchController : NetworkBehaviour
     private readonly NetworkList<MinigameVoteEntry> votes = new();
 
     private bool selectionRestrictionApplied;
+    private DisablePlayer selectionRestrictedPlayer;
+    private int selectionRestrictionHandle;
 
     private readonly NetworkVariable<bool> selectionVisible =
         new(false, NetworkVariableReadPermission.Everyone,
@@ -66,6 +68,8 @@ public class NextMatchController : NetworkBehaviour
         base.OnNetworkSpawn();
         networkManager = NetworkManager.Singleton;
         selectionRestrictionApplied = false;
+        selectionRestrictedPlayer = null;
+        selectionRestrictionHandle = 0;
 
         if (IsServer)
         {
@@ -93,6 +97,8 @@ public class NextMatchController : NetworkBehaviour
         NetworkGameManager.LocalPlayerReady -= OnLocalPlayerReady;
         NetworkGameManager.LocalPlayerLeft -= OnLocalPlayerLeft;
         selectionRestrictionApplied = false;
+        selectionRestrictedPlayer = null;
+        selectionRestrictionHandle = 0;
 
         if (IsServer && networkManager != null)
             networkManager.OnConnectionEvent -= OnConnectionEvent;
@@ -108,7 +114,7 @@ public class NextMatchController : NetworkBehaviour
         {
             selectionRestrictionApplied = false;
             Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            Cursor.visible = false;
         }
     }
 
@@ -121,6 +127,8 @@ public class NextMatchController : NetworkBehaviour
     private void OnLocalPlayerLeft()
     {
         selectionRestrictionApplied = false;
+        selectionRestrictedPlayer = null;
+        selectionRestrictionHandle = 0;
     }
 
     private void ApplySelectionRestriction(DisablePlayer disablePlayer)
@@ -151,7 +159,12 @@ public class NextMatchController : NetworkBehaviour
             return;
         }
 
-        disablePlayer.AddSceneScopedRestriction(PlayerControlChannels.All);
+        selectionRestrictionHandle =
+            disablePlayer.AddSceneScopedRestriction(PlayerControlChannels.All);
+        if (selectionRestrictionHandle == 0)
+            return;
+
+        selectionRestrictedPlayer = disablePlayer;
         selectionRestrictionApplied = true;
     }
 
@@ -411,7 +424,9 @@ public class NextMatchController : NetworkBehaviour
         if (selectedIndex < 0)
         {
             Debug.Log("No minigame votes were received. Returning the party to the lobby.");
+            ReleaseSelectionRestrictionRpc();
             ReturnPartyToLobbyServer();
+            UnlockCursorForParty();
             yield break;
         }
 
@@ -438,6 +453,51 @@ public class NextMatchController : NetworkBehaviour
         }
 
         networkSceneController.ReturnPartyToLobby();
+    }
+
+    [Rpc(SendTo.Everyone)]
+    private void ReleaseSelectionRestrictionRpc()
+    {
+        if (selectionRestrictedPlayer != null &&
+            selectionRestrictionHandle != 0)
+        {
+            selectionRestrictedPlayer.RemoveRestriction(
+                selectionRestrictionHandle
+            );
+        }
+
+        selectionRestrictedPlayer = null;
+        selectionRestrictionHandle = 0;
+        selectionRestrictionApplied = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = false;
+    }
+
+    private void UnlockCursorForParty()
+    {
+        UnlockCursorLocally();
+        StartCoroutine(UnlockCursorAfterFrame());
+        UnlockCursorForPartyRpc();
+    }
+
+    [Rpc(SendTo.Everyone)]
+    private void UnlockCursorForPartyRpc()
+    {
+        UnlockCursorLocally();
+        StartCoroutine(UnlockCursorAfterFrame());
+    }
+
+    private static void UnlockCursorLocally()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = false;
+    }
+
+    private IEnumerator UnlockCursorAfterFrame()
+    {
+        yield return null;
+        yield return new WaitForEndOfFrame();
+        UnlockCursorLocally();
     }
 
     private int GetUnanimousOptionIndex()
