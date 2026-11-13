@@ -910,7 +910,15 @@ MonoBehaviour:
   resultsLayout: {fileID: 2117529295}
   resultPrefab: {fileID: 64060724101501383, guid: bd124b93bccad6d4f970e7e9f4caf636, type: 3}
   resultsManager: {fileID: 575880752}
-  layoutPresets: []
+  layoutPresets:
+  - minimumPlayers: 1
+    maximumPlayers: 10
+    rowHeight: 100
+    spacing: 120
+    paddingLeft: 10
+    paddingRight: 10
+    paddingTop: 10
+    paddingBottom: 10
   rowStaggerDelay: 0.2
   screenExitAnimationDuration: 0.5
 --- !u!1 &135202238
@@ -2643,6 +2651,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HighlightMyText
   audioClip: {fileID: 8300000, guid: 5f50c44e8d61a4aa0ac75e3b18892902, type: 3}
   animator: {fileID: 414019966}
+  highlightTrigger: TriggerHighlightUI
 --- !u!1 &430551338
 GameObject:
   m_ObjectHideFlags: 0
@@ -3507,6 +3516,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HighlightMyText
   audioClip: {fileID: 8300000, guid: 72d231423b2ec4543bb3c27a864a443f, type: 3}
   animator: {fileID: 544805854}
+  highlightTrigger: TriggerHighlightUI
 --- !u!95 &544805854
 Animator:
   serializedVersion: 7
@@ -6257,6 +6267,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HighlightMyText
   audioClip: {fileID: 8300000, guid: 6f62e5c79ca717045b8b82df08cdb5e8, type: 3}
   animator: {fileID: 748838923}
+  highlightTrigger: TriggerHighlightUI
 --- !u!95 &748838923
 Animator:
   serializedVersion: 7
