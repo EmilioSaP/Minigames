@@ -3,29 +3,39 @@ using TMPro;
 
 public class ReadyForMatchUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text statusText;
+    [SerializeField] private HighlightSwap swapUI;
     [SerializeField] private TMP_Text instructionText;
 
     public void SetVisible(bool visible)
     {
-        gameObject.SetActive(visible);
+        if (visible)
+        {
+            swapUI.SwapShow();
+            instructionText.text = "Press [R] to mark as ready";
+        }
+        else
+        {
+            swapUI.SwapHide();
+            instructionText.text = "";
+        }
+
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     public void SetReadyUI()
     {
-        statusText.text = "[Ready]";
+        swapUI.SwapToB();
         instructionText.text = "Press [R] to mark as ready";
     }
 
     public void SetNotReadyUI()
     {
-        statusText.text = "[Not Ready]";
+        swapUI.SwapToA();
         instructionText.text = "Press [R] to mark as not ready";
     }
     public void AllPlayersReady()
     {
-        statusText.text = "All players are ready!";
         SetVisible(false);
+        instructionText.text = "";
     }
 }

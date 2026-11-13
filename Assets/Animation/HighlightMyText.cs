@@ -4,6 +4,7 @@ public class HighlightMyText : MonoBehaviour
 {
     [SerializeField] private AudioClip audioClip; 
     [SerializeField] private Animator animator;
+    [SerializeField] public string highlightTrigger = "TriggerHighlightUI";
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -14,7 +15,7 @@ public class HighlightMyText : MonoBehaviour
     // Update is called once per frame
     public void HighlightUIText()
     {
-        animator.SetTrigger("TriggerHighlightUI");
+        animator.SetTrigger(highlightTrigger);
         if (audioClip != null)
             AudioManager.Instance.PlayLocalSFX(audioClip);
     }
