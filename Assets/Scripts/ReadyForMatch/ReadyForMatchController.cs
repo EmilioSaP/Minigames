@@ -22,6 +22,8 @@ public class ReadyForMatchController : NetworkBehaviour
     private NetworkManager networkManager;
     private bool startRequested;
     private bool wasSelectionActive;
+    private bool isReadyChangePending;
+    private bool pendingReadyValue;
 
     private void Awake()
     {
@@ -53,6 +55,7 @@ public class ReadyForMatchController : NetworkBehaviour
         base.OnNetworkSpawn();
 
         startRequested = false;
+        isReadyChangePending = false;
         readyForMatchUI?.SetVisible(true);
         NetworkGameManager.LocalPlayerLeft += OnLocalPlayerLeft;
 
@@ -111,6 +114,7 @@ public class ReadyForMatchController : NetworkBehaviour
 
         startRequested = false;
         wasSelectionActive = false;
+        isReadyChangePending = false;
         readyForMatchUI?.SetVisible(false);
 
         base.OnNetworkDespawn();
@@ -120,6 +124,7 @@ public class ReadyForMatchController : NetworkBehaviour
     {
         startRequested = false;
         wasSelectionActive = false;
+        isReadyChangePending = false;
         readyForMatchUI?.SetVisible(false);
     }
 
@@ -143,17 +148,20 @@ public class ReadyForMatchController : NetworkBehaviour
         if (!IsClient ||
             SceneManager.GetActiveScene().name != lobbySceneName ||
             isSelectionActive ||
+            isReadyChangePending ||
             Keyboard.current == null ||
             !Keyboard.current.rKey.wasPressedThisFrame)
         {
             return;
         }
 
-        ToggleReadyRpc();
+        pendingReadyValue = !IsLocalPlayerReady();
+        isReadyChangePending = true;
+        SetReadyRpc(pendingReadyValue);
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
-    private void ToggleReadyRpc(RpcParams rpcParams = default)
+    private void SetReadyRpc(bool isReady, RpcParams rpcParams = default)
     {
         if (!IsServer ||
             networkManager == null ||
@@ -170,10 +178,10 @@ public class ReadyForMatchController : NetworkBehaviour
             return;
 
         int readyIndex = FindReadyClientIndex(clientId);
-        if (readyIndex >= 0)
-            readyClientIds.RemoveAt(readyIndex);
-        else
+        if (isReady && readyIndex < 0)
             readyClientIds.Add(clientId);
+        else if (!isReady && readyIndex >= 0)
+            readyClientIds.RemoveAt(readyIndex);
     }
 
     private void OnConnectionEvent(
@@ -194,11 +202,17 @@ public class ReadyForMatchController : NetworkBehaviour
     private void OnReadyClientsChanged(NetworkListEvent<ulong> change)
     {
         RefreshReadiness();
+        if (isReadyChangePending &&
+            IsLocalPlayerReady() == pendingReadyValue)
+        {
+            isReadyChangePending = false;
+        }
         TryStartMatch();
     }
 
     private void OnActiveSceneChanged(Scene previousScene, Scene newScene)
     {
+        isReadyChangePending = false;
         if (newScene.name != lobbySceneName)
             return;
 

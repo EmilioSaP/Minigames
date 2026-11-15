@@ -131,9 +131,9 @@ public class NetworkGrabbableInteraction :
     // SERVER - PICKUP
     // ---------------------------------------------------------
 
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     private void RequestPickupServerRpc(
-        ServerRpcParams rpcParams = default)
+        RpcParams rpcParams = default)
     {
         ulong sender = rpcParams.Receive.SenderClientId;
 
@@ -216,9 +216,9 @@ public class NetworkGrabbableInteraction :
     // SERVER - DROP
     // ---------------------------------------------------------
 
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     private void RequestDropServerRpc(
-        ServerRpcParams rpcParams = default)
+        RpcParams rpcParams = default)
     {
         if (!IsHeld ||
             holderClientId.Value != rpcParams.Receive.SenderClientId)
@@ -233,11 +233,11 @@ public class NetworkGrabbableInteraction :
     // SERVER - THROW
     // ---------------------------------------------------------
 
-    [ServerRpc(RequireOwnership = false)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     private void RequestThrowServerRpc(
         Vector3 direction,
         float normalizedCharge,
-        ServerRpcParams rpcParams = default)
+        RpcParams rpcParams = default)
     {
         if (!IsHeld ||
             holderClientId.Value != rpcParams.Receive.SenderClientId)
