@@ -43,8 +43,9 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float externalVelocityDecay = 14f;
     [SerializeField] private float maxExternalSpeed = 12f;
 
-    [Header("Audio")]
+    [Header("Audio & Animation")]
     [SerializeField] private NetworkPlayerAudio networkPlayerAudio;
+    [SerializeField] private NetworkPlayerAnimator networkPlayerAnimator;
     
 
     public bool IsMoving { get; private set; }
@@ -76,6 +77,9 @@ public class PlayerMovement : NetworkBehaviour
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
+
+        if (networkPlayerAnimator == null)
+            networkPlayerAnimator = GetComponent<NetworkPlayerAnimator>();
     }
 
     private void Update()
@@ -358,7 +362,9 @@ public class PlayerMovement : NetworkBehaviour
                 {
                     networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Land);
                 }
-                    
+
+                if (networkPlayerAnimator != null)
+                    networkPlayerAnimator.TriggerLandingFromOwner();
             }
 
             // Refresh coyote time while grounded.
@@ -393,6 +399,9 @@ public class PlayerMovement : NetworkBehaviour
 
             if (networkPlayerAudio != null)
                 networkPlayerAudio.PlayFromOwner(PlayerSoundEvent.Jump);
+
+            if (networkPlayerAnimator != null)
+                networkPlayerAnimator.TriggerJumpFromOwner();
         }
 
         if (IsJumping && jumpHeld && !jumpPressed)

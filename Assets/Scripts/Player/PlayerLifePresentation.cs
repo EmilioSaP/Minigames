@@ -10,6 +10,7 @@ public class PlayerLifePresentation : NetworkBehaviour
     [SerializeField] private ParticleSystem deathBurst;
     [SerializeField] private NetworkPlayerAudio networkPlayerAudio;
     private PlayerMovement playerMovement;
+    private NetworkPlayerAnimator networkPlayerAnimator;
 
     private PlayerHealth playerHealth;
     private DisablePlayer disablePlayer;
@@ -33,6 +34,7 @@ public class PlayerLifePresentation : NetworkBehaviour
         playerHealth = GetComponent<PlayerHealth>();
         disablePlayer = GetComponent<DisablePlayer>();
         playerMovement = GetComponent<PlayerMovement>();
+        networkPlayerAnimator = GetComponent<NetworkPlayerAnimator>();
 
         if (playerHealth == null)
         {
@@ -82,6 +84,8 @@ public class PlayerLifePresentation : NetworkBehaviour
         bool isRespawning = false)
     {
         // Visual presentation happens on every observing client.
+        networkPlayerAnimator?.ApplyLifeState(isDead, isRespawning);
+
         if (isDead)
         {
             if (playEffect)
@@ -96,14 +100,14 @@ public class PlayerLifePresentation : NetworkBehaviour
             );
         }
 
-        if (playerVisuals != null)
+        /*if (playerVisuals != null)
         {
             foreach (var visual in playerVisuals)
             {
                 if (visual != null)
                     visual.SetActive(!isDead);
             }
-        }
+        }*/ // Player visuals will now be done via animation clips.
 
         if (isDead && playEffect && deathBurst != null)
         {
