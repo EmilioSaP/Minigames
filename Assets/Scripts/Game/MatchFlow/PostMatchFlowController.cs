@@ -68,6 +68,13 @@ public class PostMatchFlowController : NetworkBehaviour
             NetworkVariableWritePermission.Server
         );
 
+    private readonly NetworkVariable<double> resultsScreenEndServerTime =
+        new NetworkVariable<double>(
+            0,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server
+        );
+
     // Participants captured at the beginning of gameplay.
     private readonly HashSet<ulong> matchParticipants = new();
 
@@ -104,6 +111,24 @@ public class PostMatchFlowController : NetworkBehaviour
 
             double remaining =
                 finishWindowEndServerTime.Value -
+                NetworkManager.Singleton.ServerTime.Time;
+
+            return Mathf.Max(0f, (float)remaining);
+        }
+    }
+
+    public float ResultsScreenTimeRemaining
+    {
+        get
+        {
+            if (CurrentStage != PostMatchStage.ResultsScreen ||
+                NetworkManager.Singleton == null)
+            {
+                return 0f;
+            }
+
+            double remaining =
+                resultsScreenEndServerTime.Value -
                 NetworkManager.Singleton.ServerTime.Time;
 
             return Mathf.Max(0f, (float)remaining);
@@ -375,13 +400,14 @@ public class PostMatchFlowController : NetworkBehaviour
 
         if (showResultsScreen)
         {
-            currentStage.Value = PostMatchStage.ResultsScreen;
-            Debug.Log("Post-match results screen started.");
-
             double resultsEnd =
                 GetServerTime() + Mathf.Max(0f, resultsScreenDuration);
 
-            while (GetServerTime() < resultsEnd)
+            resultsScreenEndServerTime.Value = resultsEnd;
+            currentStage.Value = PostMatchStage.ResultsScreen;
+            Debug.Log("Post-match results screen started.");
+
+            while (GetServerTime() < resultsScreenEndServerTime.Value)
             {
                 yield return null;
             }

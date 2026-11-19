@@ -25,13 +25,13 @@ public class ReadyForMatchUI : MonoBehaviour
     public void SetReadyUI()
     {
         swapUI.SwapToB();
-        instructionText.text = "Press [R] to mark as ready";
+        instructionText.text = "Press [R] to mark as not ready";
     }
 
     public void SetNotReadyUI()
     {
         swapUI.SwapToA();
-        instructionText.text = "Press [R] to mark as not ready";
+        instructionText.text = "Press [R] to mark as ready";
     }
     public void AllPlayersReady()
     {

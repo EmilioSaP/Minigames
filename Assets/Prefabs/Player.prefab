@@ -5895,7 +5895,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 442197133
+  GlobalObjectIdHash: 2074510670
   InScenePlacedSourceGlobalObjectIdHash: 3758220817
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -11522,7 +11522,7 @@ MonoBehaviour:
   playerCamera: {fileID: 6918061636176631843}
   normalFOV: 60
   sprintFOV: 75
-  transitionSpeed: 10
+  transitionSpeed: 25
 --- !u!1 &5322948487303994190
 GameObject:
   m_ObjectHideFlags: 0

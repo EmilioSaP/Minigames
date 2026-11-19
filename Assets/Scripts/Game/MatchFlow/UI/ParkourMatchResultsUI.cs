@@ -48,6 +48,7 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
     [SerializeField] private IndividualRaceResult resultPrefab;
 
     [SerializeField] private MatchResultsManager resultsManager;
+    [SerializeField] private PostMatchFlowController postMatchFlowController;
 
     [Header("Player Count Layouts")]
     [SerializeField] private PlayerCountLayout[] layoutPresets;
@@ -55,6 +56,7 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
     [Header("Animation Settings")]
     [SerializeField] private float rowStaggerDelay = 0.2f;
     [SerializeField] private float screenExitAnimationDuration = 0.5f;
+    [SerializeField] private CountNumberAnimator countNumberAnimator;
 
     private readonly List<IndividualRaceResult> instantiatedRows = new();
 
@@ -63,6 +65,7 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
 
     private bool isVisible;
     private bool hasBuiltResults;
+    private int currentSecond = -1;
 
     private void Awake()
     {
@@ -88,6 +91,14 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
             StopCoroutine(hideCoroutine);
             hideCoroutine = null;
         }
+    }
+
+    private void Update()
+    {
+        if (!isVisible)
+            return;
+
+        RefreshCountdown();
     }
 
     // ------------------------------------
@@ -119,8 +130,10 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
         }
 
         isVisible = true;
+        currentSecond = -1;
 
         SetCanvasVisible(true);
+        RefreshCountdown();
 
         if (!hasBuiltResults && buildCoroutine == null)
         {
@@ -183,6 +196,35 @@ public class ParkourMatchResultsUI : MonoBehaviour, IMatchResultsUI
         else
         {
             faderesultsGroup.FadeOut();
+        }
+    }
+
+    private void RefreshCountdown()
+    {
+        if (postMatchFlowController == null)
+        {
+            postMatchFlowController =
+                FindFirstObjectByType<PostMatchFlowController>();
+        }
+
+        if (postMatchFlowController == null ||
+            !postMatchFlowController.IsSpawned ||
+            countNumberAnimator == null)
+        {
+            return;
+        }
+
+        int seconds =
+            Mathf.CeilToInt(postMatchFlowController.ResultsScreenTimeRemaining);
+
+        if (seconds <= 0)
+        {
+            return;
+        }
+        if (seconds != currentSecond)
+        {
+            currentSecond = seconds;
+            countNumberAnimator.AnimateNumber(seconds);
         }
     }
 
