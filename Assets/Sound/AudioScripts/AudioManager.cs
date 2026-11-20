@@ -148,8 +148,21 @@ public sealed class AudioManager : MonoBehaviour
 
     public void ResumeMainMusic()
     {
+        if (isTemporaryMusicActive)
+        {
+            shouldResumeMainMusicAfterTemporary = true;
+
+            if (mainMusicNeedsPlay)
+            {
+                mainMusicNeedsPlay = false;
+                mainTrackChangedDuringTemporary = true;
+            }
+
+            return;
+        }
+
         // Avoid overlapping the main track with an active temporary track.
-        if (!isTemporaryMusicActive && musicSource != null && musicSource.clip != null)
+        if (musicSource != null && musicSource.clip != null)
         {
             if (mainMusicNeedsPlay)
             {
